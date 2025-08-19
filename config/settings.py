@@ -1,15 +1,26 @@
 from pathlib import Path
 from datetime import timedelta
+import os
+from django.core.exceptions import ImproperlyConfigured
 
+def get_env_variable(var_name):
+    """Get the environment variable or return exception."""
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = f"Set the {var_name} environment variable"
+        raise ImproperlyConfigured(error_msg)
+
+# Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = get_env_variable('SECRET_KEY')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-SECRET_KEY = 'dev-secret-change-me'   # replace with env var in prod
-DEBUG = True
-ALLOWED_HOSTS = ["*"]  # during dev
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition
@@ -132,5 +143,17 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
-# CORS (allow local frontend)
-CORS_ALLOW_ALL_ORIGINS = True  # in dev only
+# CORS
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+
+# Security Settings for Production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
