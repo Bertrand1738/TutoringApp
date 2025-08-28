@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import CourseCategory, Course, Video
+from student_enrollments.models import Enrollment
+from payments.models import Order
 
 class CourseCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,6 +13,12 @@ class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = ['id', 'title', 'description', 'video_url', 'order_index', 'is_preview', 'created_at']
+
+
+class CourseListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["id", "title", "price", "description", "created_at"]
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -29,3 +37,19 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'title', 'description', 'price', 'created_at', 'published',
                  'teacher', 'category', 'category_id', 'videos']
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    course = CourseListSerializer(read_only=True)
+    
+    class Meta:
+        model = Enrollment
+        fields = ["id", "course", "enrolled_at"]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    course = CourseListSerializer(read_only=True)
+    
+    class Meta:
+        model = Order
+        fields = ["id", "course", "amount", "status", "created_at"]

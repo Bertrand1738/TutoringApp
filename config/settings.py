@@ -2,6 +2,13 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
+# Build paths inside the project
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 def get_env_variable(var_name):
     """Get the environment variable or return exception."""
@@ -10,9 +17,6 @@ def get_env_variable(var_name):
     except KeyError:
         error_msg = f"Set the {var_name} environment variable"
         raise ImproperlyConfigured(error_msg)
-
-# Build paths inside the project
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = get_env_variable('SECRET_KEY')
@@ -46,7 +50,8 @@ INSTALLED_APPS = [
     "courses",
     "reviews",
     "badges",
-    "payments",
+    "payments.apps.PaymentsConfig",
+    "enrollments.apps.EnrollmentsConfig",
     "live_sessions",
 ]
 
@@ -145,6 +150,11 @@ SIMPLE_JWT = {
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+
+# Stripe Configuration
+STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = get_env_variable('STRIPE_WEBHOOK_SECRET')
 
 # Security Settings for Production
 if not DEBUG:
