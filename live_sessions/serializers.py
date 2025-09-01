@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import TimeSlot, LiveSession
-from courses.serializers import CourseSerializer
+from courses.course_serializers import CourseSerializer
 from accounts.serializers import UserSerializer
 
 class TimeSlotSerializer(serializers.ModelSerializer):

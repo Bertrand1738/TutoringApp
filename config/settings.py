@@ -19,7 +19,7 @@ def get_env_variable(var_name):
         raise ImproperlyConfigured(error_msg)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_env_variable('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -47,12 +47,13 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
 
     # other local apps
-    "courses",
-    "reviews",
-    "badges",
+    "courses.apps.CoursesConfig",
+    "reviews.apps.ReviewsConfig",
+    "badges.apps.BadgesConfig",
     "payments.apps.PaymentsConfig",
     "enrollments.apps.EnrollmentsConfig",
-    "live_sessions",
+    "student_enrollments.apps.StudentEnrollmentsConfig",
+    "live_sessions.apps.LiveSessionsConfig",
 ]
 
 MIDDLEWARE = [
@@ -141,6 +142,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.AllowAny",
     ),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "core.throttling.UserBasedThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "user": "100/hour",
+        "live_session": "20/hour",
+    },
 }
 
 SIMPLE_JWT = {
@@ -151,10 +159,13 @@ SIMPLE_JWT = {
 # CORS
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
-# Stripe Configuration
-STRIPE_PUBLISHABLE_KEY = get_env_variable('STRIPE_PUBLISHABLE_KEY')
-STRIPE_SECRET_KEY = get_env_variable('STRIPE_SECRET_KEY')
-STRIPE_WEBHOOK_SECRET = get_env_variable('STRIPE_WEBHOOK_SECRET')
+# Stripe Configuration (with development fallbacks)
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'dummy-dev-key')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'dummy-dev-key')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', 'dummy-dev-key')
+
+# Import Zoom settings
+from .settings_zoom import *
 
 # Security Settings for Production
 if not DEBUG:

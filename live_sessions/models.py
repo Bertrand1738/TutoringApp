@@ -64,6 +64,9 @@ class LiveSession(models.Model):
         ('missed', 'Missed')
     ]
 
+    from core.services.zoom import ZoomMeetingService
+    from core.services.notifications import NotificationService
+
     course = models.ForeignKey(
         'courses.Course', 
         on_delete=models.CASCADE,
@@ -125,8 +128,31 @@ class LiveSession(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
-        # Mark the time slot as unavailable when session is created
-        if not self.pk:  # Only on creation
+        is_new = not self.pk
+        
+        if is_new:
+            # Create Zoom meeting
+            zoom_service = ZoomMeetingService()
+            duration = int((self.time_slot.end_time - self.time_slot.start_time).total_seconds() / 60)
+            meeting_info = zoom_service.create_meeting(
+                topic=f"{self.course.title} - Session with {self.student.get_full_name()}",
+                start_time=self.time_slot.start_time,
+                duration_minutes=duration,
+                teacher_email=self.course.teacher.user.email
+            )
+            
+            # Save meeting details
+            self.meeting_url = meeting_info['join_url']
+            self.meeting_id = meeting_info['id']
+            self.meeting_password = meeting_info['password']
+            self.meeting_start_url = meeting_info['start_url']
+            
+            # Mark the time slot as unavailable
             self.time_slot.is_available = False
             self.time_slot.save()
+        
         super().save(*args, **kwargs)
+
+        if is_new:
+            # Send notifications
+            NotificationService.send_session_scheduled_notification(self)

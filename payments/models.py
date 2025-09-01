@@ -73,17 +73,19 @@ class Order(models.Model):
         """
         Mark order as completed and create enrollment
         """
-        from enrollments.models import Enrollment
-        
         if self.status != 'completed':
-            self.status = 'completed'
-            self.save()
+            from enrollments.models import Enrollment
             
             # Create enrollment
-            Enrollment.objects.create(
+            enrollment = Enrollment.objects.create(
                 student=self.user,
                 course=self.course
             )
+            
+            # Update order status
+            self.status = 'completed'
+            self.metadata['enrollment_id'] = enrollment.id
+            self.save()
     
     def mark_as_failed(self, error_message=None):
         """

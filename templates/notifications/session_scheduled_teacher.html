@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Session Scheduled</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ teacher_name }},</p>
+            
+            <p>A new session for <strong>{{ course_title }}</strong> has been scheduled!</p>
+            
+            <h3>Session Details:</h3>
+            <ul>
+                <li><strong>Student:</strong> {{ student_name }}</li>
+                <li><strong>Date & Time:</strong> {{ start_time }}</li>
+            </ul>
+
+            <p>To start the session, click the button below at the scheduled time:</p>
+            
+            <a href="{{ start_url }}" class="button">Start Session</a>
+
+            <p>Please note:</p>
+            <ul>
+                <li>Start the session 5 minutes before the scheduled time</li>
+                <li>Ensure you have a stable internet connection</li>
+                <li>Test your audio and video before starting</li>
+                <li>Have your teaching materials ready</li>
+            </ul>
+
+            <p>If you need to cancel or reschedule, please do so at least 24 hours in advance.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

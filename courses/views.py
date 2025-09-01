@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import CourseCategory, Course, Video
-from .serializers import CourseCategorySerializer, CourseSerializer, VideoSerializer
+from .course_serializers import CourseCategorySerializer, CourseSerializer
+from .content_serializers import VideoSerializer
 from core.permissions import IsTeacher
 
 class CourseCategoryViewSet(viewsets.ModelViewSet):

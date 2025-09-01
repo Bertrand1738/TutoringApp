@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>System Error Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .error-header {
+            background-color: #ff4444;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .error-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .error-context {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-header">
+        <h2>System Error Alert: {{ error_type }}</h2>
+    </div>
+    
+    <div class="error-details">
+        <h3>Error Details:</h3>
+        <p>{{ error_details }}</p>
+    </div>
+    
+    {% if context %}
+    <div class="error-context">
+        <h3>Additional Context:</h3>
+        <ul>
+        {% for key, value in context.items %}
+            <li><strong>{{ key }}:</strong> {{ value }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
+    <p class="timestamp">
+        Timestamp: {% now "Y-m-d H:i:s" %}
+    </p>
+</body>
+</html>

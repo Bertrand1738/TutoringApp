@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
+from core.throttling import LiveSessionThrottle
 from .models import TimeSlot, LiveSession
 from .serializers import TimeSlotSerializer, LiveSessionSerializer
 import requests
@@ -64,6 +65,7 @@ class TimeSlotViewSet(viewsets.ModelViewSet):
 class LiveSessionViewSet(viewsets.ModelViewSet):
     serializer_class = LiveSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [LiveSessionThrottle]
 
     def get_queryset(self):
         queryset = LiveSession.objects.select_related(
@@ -101,15 +103,21 @@ class LiveSessionViewSet(viewsets.ModelViewSet):
 
     def create_zoom_meeting(self, data):
         """
-        Create a Zoom meeting using Zoom API
+        Create a Zoom meeting using our ZoomMeetingService
         """
-        # TODO: Implement actual Zoom API integration
-        # This is a placeholder implementation
-        return {
-            'id': '123456789',
-            'join_url': f'https://zoom.us/j/123456789',
-            'password': 'password123'
-        }
+        from core.services.zoom import ZoomMeetingService
+        
+        time_slot = data['time_slot']
+        course = data['course']
+        duration = int((time_slot.end_time - time_slot.start_time).total_seconds() / 60)
+        
+        zoom = ZoomMeetingService()
+        return zoom.create_meeting(
+            topic=f"{course.title} - Session with {self.request.user.get_full_name()}",
+            start_time=time_slot.start_time,
+            duration_minutes=duration,
+            teacher_email=course.teacher.user.email
+        )
 
     def create_meet_meeting(self, data):
         """
@@ -126,22 +134,67 @@ class LiveSessionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """
-        Cancel a scheduled session
+        Cancel a scheduled session and end associated Zoom meeting if it exists
         """
         session = self.get_object()
         
-        if session.status not in ['scheduled', 'confirmed']:
+        if session.status not in ['scheduled', 'confirmed', 'ongoing']:
             return Response(
-                {"detail": "Only scheduled or confirmed sessions can be cancelled"},
+                {"detail": "Cannot cancel completed or already cancelled sessions"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Make the time slot available again
-        session.time_slot.is_available = True
-        session.time_slot.save()
+        try:
+            # End Zoom meeting if it's ongoing
+            if session.status == 'ongoing' and session.meeting_platform == 'zoom' and session.meeting_id:
+                from core.services.zoom import ZoomMeetingService
+                zoom = ZoomMeetingService()
+                zoom.end_meeting(session.meeting_id)
 
-        # Update session status
-        session.status = 'cancelled'
-        session.save()
+            # Make the time slot available again
+            session.time_slot.is_available = True
+            session.time_slot.save()
 
-        return Response({"status": "Session cancelled successfully"})
+            # Update session status
+            session.status = 'cancelled'
+            session.save()
+
+            return Response({"status": "Session cancelled successfully"})
+            
+        except Exception as e:
+            return Response(
+                {"detail": f"Error cancelling session: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        """
+        Mark a session as completed and end the Zoom meeting
+        """
+        session = self.get_object()
+        
+        if session.status != 'ongoing':
+            return Response(
+                {"detail": "Only ongoing sessions can be marked as completed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # End Zoom meeting
+            if session.meeting_platform == 'zoom' and session.meeting_id:
+                from core.services.zoom import ZoomMeetingService
+                zoom = ZoomMeetingService()
+                zoom.end_meeting(session.meeting_id)
+
+            # Update session status
+            session.status = 'completed'
+            session.save()
+
+            return Response({"status": "Session marked as completed"})
+            
+        except Exception as e:
+            return Response(
+                {"detail": f"Error completing session: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -14,9 +14,47 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for handling course orders and Stripe payments.
+    Provides endpoints for:
+    - Creating payment intents
+    - Confirming payments
+    - Viewing order history
+    - Downloading receipts
     """
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    
+    @action(detail=False)
+    def history(self, request):
+        """
+        Get user's payment history with course details
+        """
+        orders = self.get_queryset().select_related('course')\
+            .order_by('-created_at')
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
+        
+    @action(detail=True)
+    def receipt(self, request, pk=None):
+        """
+        Generate and return payment receipt
+        """
+        order = self.get_object()
+        if order.status != 'completed':
+            return Response(
+                {'error': 'Receipt only available for completed orders'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Basic receipt data - expand this as needed
+        receipt_data = {
+            'order_id': order.id,
+            'date': order.created_at.strftime('%Y-%m-%d'),
+            'course': order.course.title,
+            'amount': str(order.amount),
+            'status': order.status,
+            'payment_id': order.stripe_payment_intent_id
+        }
+        return Response(receipt_data)
     
     def get_queryset(self):
         """Filter orders to show only user's own orders"""

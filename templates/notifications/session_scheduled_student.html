@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Session Scheduled</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ student_name }},</p>
+            
+            <p>Your session for <strong>{{ course_title }}</strong> has been successfully scheduled!</p>
+            
+            <h3>Session Details:</h3>
+            <ul>
+                <li><strong>Teacher:</strong> {{ teacher_name }}</li>
+                <li><strong>Date & Time:</strong> {{ start_time }}</li>
+                <li><strong>Meeting URL:</strong> {{ meeting_url }}</li>
+                {% if meeting_password %}
+                <li><strong>Meeting Password:</strong> {{ meeting_password }}</li>
+                {% endif %}
+            </ul>
+
+            <p>To join the session, simply click the button below at the scheduled time:</p>
+            
+            <a href="{{ meeting_url }}" class="button">Join Session</a>
+
+            <p>Please note:</p>
+            <ul>
+                <li>Join the session 5 minutes before the scheduled time</li>
+                <li>Ensure you have a stable internet connection</li>
+                <li>Test your audio and video before joining</li>
+                <li>Have your study materials ready</li>
+            </ul>
+
+            <p>If you need to cancel or reschedule, please do so at least 24 hours in advance.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
