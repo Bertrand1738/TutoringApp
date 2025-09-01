@@ -1,6 +1,0 @@
-ERROR: cannot import name 'Assignment' from 'courses.models' (C:\Users\pc\Desktop\Projects\Tutoring\frenchtutor_hub\courses\models.py)
-
-Traceback (most recent call last):
-  File "C:\Users\pc\Desktop\Projects\Tutoring\frenchtutor_hub\check_models.py", line 15, in <module>
-    from courses.models import Video, PDF, Assignment, Quiz
-ImportError: cannot import name 'Assignment' from 'courses.models' (C:\Users\pc\Desktop\Projects\Tutoring\frenchtutor_hub\courses\models.py)
