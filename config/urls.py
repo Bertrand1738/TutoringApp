@@ -26,7 +26,8 @@ urlpatterns = [
     path("api/", include(("courses.urls", "courses"), namespace="courses")),
     path("api/payments/", include("payments.urls", namespace="payments")),
     path("api/enrollments/", include("enrollments.urls", namespace="enrollments")),
-    # reviews, badges, live_sessions will be added next
+    path("api/live/", include("live_sessions.urls", namespace="live_sessions")),
+    # reviews, badges will be added next
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
