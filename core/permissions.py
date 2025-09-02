@@ -5,6 +5,72 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.shortcuts import get_object_or_404
 from courses.models import Course
 
+class IsTeacherOrReadOnly(BasePermission):
+    """
+    Allow read access to everyone, but only teachers can make changes.
+    """
+    def has_permission(self, request, view):
+        # Read permissions are allowed for any request
+        if request.method in SAFE_METHODS:
+            return True
+            
+        # Write permissions are only allowed for teachers
+        return request.user.is_authenticated and hasattr(request.user, 'teacher_profile')
+        
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed for any request
+        if request.method in SAFE_METHODS:
+            return True
+            
+        # Write permissions are only allowed for teachers
+        return request.user.is_authenticated and hasattr(request.user, 'teacher_profile')
+
+class IsOwnerOrTeacher(BasePermission):
+    """
+    Allow access to teachers or the owner (student) of the object
+    """
+    def has_object_permission(self, request, view, obj):
+        # Staff can access anything
+        if request.user.is_staff:
+            return True
+            
+        # Teachers can access all
+        if hasattr(request.user, 'teacher_profile'):
+            return True
+            
+        # Students can only access their own submissions
+        if hasattr(obj, 'student'):
+            return obj.student.user == request.user
+            
+        return False
+
+class IsEnrolledOrTeacher(BasePermission):
+    """
+    Allow access if the user is a teacher or enrolled in the course
+    """
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+            
+        # Staff can access anything
+        if request.user.is_staff:
+            return True
+            
+        # Teachers can access anything
+        if hasattr(request.user, 'teacher_profile'):
+            return True
+            
+        # For students, check if they're enrolled in the course
+        course_id = view.kwargs.get('course_pk') or request.data.get('course')
+        if not course_id:
+            return False
+            
+        if not hasattr(request.user, 'student_profile'):
+            return False
+            
+        course = get_object_or_404(Course, pk=course_id)
+        return course.enrollments.filter(student=request.user.student_profile).exists()
+
 class IsStudent(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and hasattr(request.user, 'studentprofile')

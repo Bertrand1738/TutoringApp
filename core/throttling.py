@@ -19,11 +19,8 @@ class UserBasedThrottle(SimpleRateThrottle):
         return f"throttle_{self.scope}_{ident}"
 
     def get_rate(self):
-        if self.request.user.is_authenticated:
-            if self.request.user.groups.filter(name='teacher').exists():
-                return '1000/hour'  # Teachers get higher limit
-            return '100/hour'  # Regular authenticated users
-        return '20/hour'  # Unauthenticated users
+        # Default rate for unauthenticated users
+        return '20/hour'
 
 class LiveSessionThrottle(UserBasedThrottle):
     """
@@ -33,8 +30,5 @@ class LiveSessionThrottle(UserBasedThrottle):
     scope = 'live_session'
 
     def get_rate(self):
-        if self.request.user.is_authenticated:
-            if self.request.user.groups.filter(name='teacher').exists():
-                return '50/hour'  # Teachers
-            return '20/hour'  # Students
-        return '5/hour'  # Unauthenticated
+        # More restrictive default rate
+        return '5/hour'

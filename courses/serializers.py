@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import CourseCategory
 from .course_serializers import CourseListSerializer
-from .content_serializers import VideoSerializer, PDFSerializer, AssignmentSerializer, QuizSerializer, ContentProgressSerializer
+from .content_serializers import VideoSerializer, PDFSerializer, AssignmentSerializer, ContentProgressSerializer
 from payments.models import Order
 
 
