@@ -24,9 +24,23 @@ class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description', 'category__name']
+    permission_classes = [permissions.AllowAny]  # Default to AllowAny for list and retrieve actions
 
     def get_queryset(self):
         queryset = Course.objects.select_related("teacher__user", "category").all()
+        
+        # Filter by featured parameter if present
+        featured = self.request.query_params.get('featured', None)
+        if featured and featured.lower() == 'true':
+            queryset = queryset.filter(published=True)
+            # Get the limit parameter, default to 3
+            limit = self.request.query_params.get('limit', 3)
+            try:
+                limit = int(limit)
+            except (ValueError, TypeError):
+                limit = 3
+            # Return limited number of courses
+            return queryset[:limit]  # Return top N as featured
         
         # For non-authenticated users or students, only show published courses
         if not self.request.user.is_authenticated or not hasattr(self.request.user, 'teacher_profile'):
@@ -39,8 +53,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_permissions(self):
+        # Always allow list and retrieve actions
         if self.action in ["list", "retrieve"]:
             return [permissions.AllowAny()]
+            
+        # Teacher permissions for create, update, delete
         return [IsTeacher()]
 
     def perform_create(self, serializer):

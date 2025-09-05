@@ -1,0 +1,173 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Notification Settings</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <form>
+                        <div class="mt-4">
+                            <h6 class="text-sm mb-3">Email Notifications</h6>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailCourseUpdates" checked>
+                                <label class="form-check-label" for="emailCourseUpdates">Course Updates</label>
+                                <p class="text-xs text-muted">Receive emails when there are updates to your enrolled courses</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailSessionReminders" checked>
+                                <label class="form-check-label" for="emailSessionReminders">Session Reminders</label>
+                                <p class="text-xs text-muted">Receive email reminders before your scheduled sessions</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailNewMessages">
+                                <label class="form-check-label" for="emailNewMessages">New Messages</label>
+                                <p class="text-xs text-muted">Receive emails when you get new messages from teachers or students</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="emailPromotions">
+                                <label class="form-check-label" for="emailPromotions">Promotions and News</label>
+                                <p class="text-xs text-muted">Receive emails about special offers and platform updates</p>
+                            </div>
+                        </div>
+                        
+                        <hr class="horizontal dark my-4">
+                        
+                        <div class="mt-4">
+                            <h6 class="text-sm mb-3">Platform Notifications</h6>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="notifCourseUpdates" checked>
+                                <label class="form-check-label" for="notifCourseUpdates">Course Updates</label>
+                                <p class="text-xs text-muted">Receive in-app notifications about course updates</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="notifSessionReminders" checked>
+                                <label class="form-check-label" for="notifSessionReminders">Session Reminders</label>
+                                <p class="text-xs text-muted">Receive in-app reminders about upcoming sessions</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="notifNewMessages" checked>
+                                <label class="form-check-label" for="notifNewMessages">New Messages</label>
+                                <p class="text-xs text-muted">Receive in-app notifications for new messages</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Language and Time Zone</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <form>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="language" class="form-control-label">Interface Language</label>
+                                    <select class="form-control" id="language">
+                                        <option value="en">English</option>
+                                        <option value="fr">Français</option>
+                                        <option value="es">Español</option>
+                                        <option value="de">Deutsch</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="timezone" class="form-control-label">Time Zone</label>
+                                    <select class="form-control" id="timezone">
+                                        <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                        <option value="EST">EST (Eastern Standard Time)</option>
+                                        <option value="CST">CST (Central Standard Time)</option>
+                                        <option value="PST">PST (Pacific Standard Time)</option>
+                                        <option value="CET">CET (Central European Time)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Privacy Settings</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <form>
+                        <div class="mt-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="profileVisibility" checked>
+                                <label class="form-check-label" for="profileVisibility">Public Profile</label>
+                                <p class="text-xs text-muted">Allow other users to see your profile information</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="onlineStatus" checked>
+                                <label class="form-check-label" for="onlineStatus">Show Online Status</label>
+                                <p class="text-xs text-muted">Display when you are online to other users</p>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="dataCollection">
+                                <label class="form-check-label" for="dataCollection">Anonymous Usage Data</label>
+                                <p class="text-xs text-muted">Allow us to collect anonymous usage data to improve our services</p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Account Actions</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="text-sm mb-0">Download Your Data</h6>
+                                <p class="text-xs text-muted mb-0">Get a copy of all your personal data</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary">Request Data</button>
+                        </div>
+                        
+                        <hr class="horizontal dark my-3">
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-sm mb-0 text-danger">Delete Account</h6>
+                                <p class="text-xs text-muted mb-0">Permanently delete your account and all data</p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger">Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

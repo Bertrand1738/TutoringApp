@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import RegisterView, MeView
 from .views_dashboard import my_enrollments, my_orders
+from .debug_views import debug_registration
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 app_name = 'accounts'
@@ -12,4 +13,6 @@ urlpatterns = [
     path("me/", MeView.as_view(), name="me"),
     path("me/enrollments/", my_enrollments, name="my_enrollments"),
     path("me/orders/", my_orders, name="my_orders"),
+    # Debug endpoints
+    path("debug-register/", debug_registration, name="debug_register"),
 ]

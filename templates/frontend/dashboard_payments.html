@@ -1,0 +1,236 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between">
+                        <h6>Payment History</h6>
+                        {% if is_teacher %}
+                        <a href="#" class="btn btn-sm btn-outline-primary">Payment Settings</a>
+                        {% else %}
+                        <a href="#" class="btn btn-sm btn-outline-primary">Add Payment Method</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="p-4">
+                        {% if payments %}
+                            <div class="table-responsive">
+                                <table class="table align-items-center mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Date</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Amount</th>
+                                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                            <th class="text-secondary opacity-7"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in payments %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex px-2 py-1">
+                                                    <div>
+                                                        <i class="fa fa-credit-card text-primary text-lg me-3"></i>
+                                                    </div>
+                                                    <div class="d-flex flex-column justify-content-center">
+                                                        <h6 class="mb-0 text-sm">{{ payment.description }}</h6>
+                                                        <p class="text-xs text-secondary mb-0">{{ payment.reference }}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs font-weight-bold mb-0">{{ payment.date|date:"M d, Y" }}</p>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <span class="text-secondary text-xs font-weight-bold">{{ payment.amount_currency }} {{ payment.amount }}</span>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                {% if payment.status == 'completed' %}
+                                                    <span class="badge badge-sm bg-success">Completed</span>
+                                                {% elif payment.status == 'pending' %}
+                                                    <span class="badge badge-sm bg-warning">Pending</span>
+                                                {% elif payment.status == 'failed' %}
+                                                    <span class="badge badge-sm bg-danger">Failed</span>
+                                                {% else %}
+                                                    <span class="badge badge-sm bg-secondary">{{ payment.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <a href="#" class="text-secondary font-weight-bold text-xs" data-toggle="tooltip" data-original-title="View details">
+                                                    Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center p-5">
+                                <img src="/static/img/illustrations/no-transactions.svg" class="img-fluid mb-3" style="max-height: 150px;" alt="No transactions">
+                                <h5>No Payment History</h5>
+                                <p class="text-secondary">You don't have any payment transactions yet.</p>
+                                {% if is_teacher %}
+                                <a href="#" class="btn btn-primary">Set Up Payment Methods</a>
+                                {% else %}
+                                <a href="#" class="btn btn-primary">Browse Courses</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if not is_teacher %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Payment Methods</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="p-4">
+                        {% if payment_methods %}
+                            <div class="row">
+                                {% for method in payment_methods %}
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="card mb-4">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                {% if method.type == 'visa' %}
+                                                    <i class="fab fa-cc-visa text-info text-lg"></i>
+                                                {% elif method.type == 'mastercard' %}
+                                                    <i class="fab fa-cc-mastercard text-danger text-lg"></i>
+                                                {% elif method.type == 'amex' %}
+                                                    <i class="fab fa-cc-amex text-success text-lg"></i>
+                                                {% else %}
+                                                    <i class="fas fa-credit-card text-primary text-lg"></i>
+                                                {% endif %}
+                                                <div class="ms-auto">
+                                                    {% if method.is_default %}
+                                                        <span class="badge badge-sm bg-gradient-success">Default</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <h6 class="text-sm mb-0">{{ method.card_type }} **** {{ method.last_four }}</h6>
+                                            <p class="text-xs text-secondary mb-0">Expires {{ method.expiry_month }}/{{ method.expiry_year }}</p>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                                {% if not method.is_default %}
+                                                <button class="btn btn-sm btn-outline-primary">Set as Default</button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center p-4">
+                                <h5>No Payment Methods Added</h5>
+                                <p class="text-secondary">You haven't added any payment methods yet.</p>
+                                <button class="btn btn-primary mt-3">
+                                    <i class="fas fa-plus me-2"></i> Add Payment Method
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if is_teacher %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Payment Account</h6>
+                </div>
+                <div class="card-body">
+                    {% if teacher_payment_account %}
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item border-0 ps-0">
+                                <strong class="text-sm text-dark">Account Type:</strong> &nbsp;
+                                <span class="text-sm">{{ teacher_payment_account.type }}</span>
+                            </li>
+                            <li class="list-group-item border-0 ps-0">
+                                <strong class="text-sm text-dark">Account Status:</strong> &nbsp;
+                                {% if teacher_payment_account.is_verified %}
+                                <span class="badge badge-sm bg-success">Verified</span>
+                                {% else %}
+                                <span class="badge badge-sm bg-warning">Pending Verification</span>
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item border-0 ps-0">
+                                <strong class="text-sm text-dark">Payout Method:</strong> &nbsp;
+                                <span class="text-sm">{{ teacher_payment_account.payout_method }}</span>
+                            </li>
+                        </ul>
+                        <div class="mt-3">
+                            <a href="#" class="btn btn-sm btn-primary">Update Payment Details</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-4">
+                            <h5>No Payment Account Set Up</h5>
+                            <p class="text-secondary">You haven't set up your payment account to receive earnings.</p>
+                            <button class="btn btn-primary mt-3">
+                                <i class="fas fa-plus me-2"></i> Set Up Payment Account
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Earnings Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <h6 class="text-sm mb-0">Available Balance</h6>
+                        </div>
+                        <div>
+                            <h6 class="text-success font-weight-bold">{{ earnings.currency }} {{ earnings.available|default:"0.00" }}</h6>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <h6 class="text-sm mb-0">Pending</h6>
+                        </div>
+                        <div>
+                            <h6 class="text-warning font-weight-bold">{{ earnings.currency }} {{ earnings.pending|default:"0.00" }}</h6>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <div>
+                            <h6 class="text-sm mb-0">Lifetime Earnings</h6>
+                        </div>
+                        <div>
+                            <h6 class="font-weight-bold">{{ earnings.currency }} {{ earnings.lifetime|default:"0.00" }}</h6>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn btn-primary">Request Payout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

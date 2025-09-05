@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}My Courses - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-sidebar {
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .dashboard-nav .nav-link {
+        color: #495057;
+        border-radius: 0;
+        padding: 0.75rem 1.25rem;
+    }
+    
+    .dashboard-nav .nav-link:hover {
+        background-color: #e9ecef;
+    }
+    
+    .dashboard-nav .nav-link.active {
+        color: #fff;
+        background-color: #0d6efd;
+    }
+    
+    .dashboard-nav .nav-link i {
+        margin-right: 0.5rem;
+    }
+    
+    .course-card {
+        transition: transform 0.3s;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .progress {
+        height: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-4 dashboard-sidebar py-4">
+            <h4 class="mb-4 px-3">{% if user.groups.all.0.name == 'teacher' or user.is_staff %}Teacher Dashboard{% else %}Student Dashboard{% endif %}</h4>
+            <div class="nav flex-column dashboard-nav">
+                <a class="nav-link" href="{% url 'frontend:dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a class="nav-link active" href="{% url 'frontend:dashboard_enrollments' %}">
+                    <i class="bi bi-journal-bookmark"></i> My Courses
+                </a>
+                {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
+                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab=students">
+                    <i class="bi bi-mortarboard"></i> Students
+                </a>
+                {% endif %}
+                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab=schedule">
+                    <i class="bi bi-calendar-check"></i> Schedule
+                </a>
+                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab=messages">
+                    <i class="bi bi-chat-left-text"></i> Messages
+                </a>
+                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab={% if user.groups.all.0.name == 'teacher' or user.is_staff %}earnings{% else %}billing{% endif %}">
+                    <i class="bi bi-cash-coin"></i> {% if user.groups.all.0.name == 'teacher' or user.is_staff %}Earnings{% else %}Billing{% endif %}
+                </a>
+                <a class="nav-link" href="{% url 'frontend:profile' %}">
+                    <i class="bi bi-person-circle"></i> Profile
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9 col-md-8 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>My Courses</h2>
+                {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
+                <a href="#" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Course
+                </a>
+                {% else %}
+                <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Browse Courses
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Courses Grid -->
+            <div class="row g-4">
+                {% if enrollments %}
+                    {% for enrollment in enrollments %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 course-card">
+                            <img src="{{ enrollment.course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.course.title }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ enrollment.course.title }}</h5>
+                                <p class="text-muted">{{ enrollment.course.teacher.user.get_full_name }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="small text-muted">Progress</div>
+                                    <div class="small">{{ enrollment.progress }}%</div>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <a href="#" class="btn btn-primary btn-sm">Continue Learning</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% elif user.groups.all.0.name == 'teacher' or user.is_staff %}
+                    {% if courses %}
+                        {% for course in courses %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100 course-card">
+                                <img src="{{ course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ course.title }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    <p class="text-muted">{{ course.category.name|default:"Uncategorized" }}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="small text-muted">Students</div>
+                                        <div class="badge bg-primary">{{ course.enrolled_students|default:"0" }}</div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between">
+                                        <a href="#" class="btn btn-outline-primary btn-sm">Edit</a>
+                                        <a href="#" class="btn btn-primary btn-sm">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12 text-center py-5">
+                            <div class="display-1 text-muted">
+                                <i class="bi bi-journal-bookmark"></i>
+                            </div>
+                            <h4 class="mt-3">You haven't created any courses yet</h4>
+                            <p class="text-muted">Start sharing your knowledge with students!</p>
+                            <a href="#" class="btn btn-primary mt-2">Create Your First Course</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="col-12 text-center py-5">
+                        <div class="display-1 text-muted">
+                            <i class="bi bi-journal-bookmark"></i>
+                        </div>
+                        <h4 class="mt-3">You haven't enrolled in any courses yet</h4>
+                        <p class="text-muted">Start your learning journey today!</p>
+                        <a href="{% url 'frontend:course_list' %}" class="btn btn-primary mt-2">Browse Courses</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

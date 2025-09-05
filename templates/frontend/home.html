@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}French Tutor Hub - Learn French Online{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/static/img/hero-background.jpg');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 100px 0;
+        margin-bottom: 30px;
+    }
+    
+    .course-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .category-card {
+        transition: all 0.3s;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .category-card:hover {
+        transform: scale(1.05);
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-4">Learn French with Expert Tutors</h1>
+        <p class="lead">Master the language of love with personalized lessons and comprehensive courses</p>
+        <div class="mt-4">
+            <a href="{% url 'frontend:course_list' %}" class="btn btn-primary btn-lg px-4 me-2">
+                <i class="bi bi-search me-2"></i>Explore Courses
+            </a>
+            <a href="#how-it-works" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-info-circle me-2"></i>How It Works
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses -->
+<section class="mb-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Featured Courses</h2>
+            <a href="{% url 'frontend:course_list' %}" class="btn btn-sm btn-outline-primary">
+                View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        
+        <!-- Loading indicator -->
+        <div id="featured-courses-loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading featured courses...</p>
+        </div>
+        
+        <!-- Featured courses container -->
+        <div class="row g-4" id="featured-courses-container">
+            <!-- Courses will be loaded here via JavaScript -->
+        </div>
+        
+        <!-- Error message container -->
+        <div id="featured-courses-error" class="alert alert-danger mt-3 d-none">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span id="featured-courses-error-message">Unable to load featured courses. Please try again later.</span>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="bg-light py-5 mb-5" id="how-it-works">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-search fs-4"></i>
+                        </div>
+                        <h4>1. Find a Course</h4>
+                        <p class="text-muted">Browse our wide selection of courses taught by expert French tutors. Filter by level, price, and schedule to find the perfect match.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-calendar-check fs-4"></i>
+                        </div>
+                        <h4>2. Enroll & Schedule</h4>
+                        <p class="text-muted">Enroll in your chosen course and schedule lessons at times that work for you. Flexible options available for all time zones.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-laptop fs-4"></i>
+                        </div>
+                        <h4>3. Learn & Connect</h4>
+                        <p class="text-muted">Join virtual sessions with your tutor, access course materials, complete assignments, and track your progress through our platform.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'frontend:register' %}" class="btn btn-primary">Get Started Today</a>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section will be kept at the bottom -->
+
+<!-- Categories -->
+<section class="mb-5 bg-light py-5">
+    <div class="container">
+        <h2 class="mb-4">Browse by Category</h2>
+        <div class="row g-4">
+            {% for category in categories %}
+                <div class="col-md-3">
+                    <a href="{% url 'frontend:course_list' %}?category={{ category.id }}" class="text-decoration-none">
+                        <div class="card category-card text-center shadow-sm">
+                            <div class="card-body bg-primary text-white p-4">
+                                <h5>{{ category.name }}</h5>
+                                <p class="small mb-0">{{ category.courses.count }} courses</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col">
+                    <div class="alert alert-info">No categories available at the moment.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="mb-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Why Choose French Tutor Hub</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="bi bi-mortarboard"></i>
+                        </div>
+                        <h4>Expert Tutors</h4>
+                        <p>Learn from native speakers and certified French language teachers with years of experience.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="bi bi-laptop"></i>
+                        </div>
+                        <h4>Interactive Learning</h4>
+                        <p>Engaging lessons, quizzes, and assignments designed to make learning French fun and effective.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="fs-1 text-primary mb-3">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <h4>Flexible Schedule</h4>
+                        <p>Learn at your own pace with on-demand lessons and live sessions that fit your schedule.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="mb-5 bg-light py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">What Our Students Say</h2>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="card border-0 shadow">
+                                <div class="card-body text-center p-5">
+                                    <p class="lead fst-italic">"The tutors at French Tutor Hub are amazing. My French has improved so much in just a few months!"</p>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="text-warning">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 mb-0 fw-bold">Sarah Johnson</p>
+                                    <small class="text-muted">Beginner French Student</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="card border-0 shadow">
+                                <div class="card-body text-center p-5">
+                                    <p class="lead fst-italic">"The course content is well-structured and the interactive assignments really help with retention."</p>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="text-warning">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-half"></i>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 mb-0 fw-bold">Michael Chen</p>
+                                    <small class="text-muted">Intermediate French Student</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="card border-0 shadow">
+                                <div class="card-body text-center p-5">
+                                    <p class="lead fst-italic">"As someone preparing for DELF B2, the advanced courses were exactly what I needed to succeed."</p>
+                                    <div class="d-flex justify-content-center">
+                                        <div class="text-warning">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                        </div>
+                                    </div>
+                                    <p class="mt-2 mb-0 fw-bold">Emilie Dubois</p>
+                                    <small class="text-muted">Advanced French Student</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="text-center mb-5">
+    <div class="container">
+        <h2>Ready to Start Your French Learning Journey?</h2>
+        <p class="lead mb-4">Join thousands of students already learning with French Tutor Hub</p>
+        <div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'frontend:course_list' %}" class="btn btn-primary btn-lg">Browse Courses</a>
+            {% else %}
+                <a href="{% url 'frontend:register' %}" class="btn btn-primary btn-lg me-2">Sign Up Now</a>
+                <a href="{% url 'frontend:login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/home.js' %}"></script>
+<script>
+    // Initialize carousel with a 5-second interval
+    document.addEventListener('DOMContentLoaded', function() {
+        var testimonialCarousel = new bootstrap.Carousel(document.getElementById('testimonialCarousel'), {
+            interval: 5000
+        });
+        
+        // Load featured courses when DOM is loaded
+        loadFeaturedCourses();
+    });
+</script>
+{% endblock %}

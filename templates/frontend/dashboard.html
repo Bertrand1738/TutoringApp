@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FrenchTutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .progress {
+        height: 10px;
+    }
+    
+    .stat-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card .icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    
+    .notification-item:not(:last-child) {
+        border-bottom: 1px solid #eee;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="mb-0">Welcome, {{ request.user.first_name|default:request.user.username }}</h1>
+            <p class="text-muted">Track your progress and manage your courses</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            {% if user_is_teacher %}
+                <a href="{% url 'frontend:teacher_dashboard' %}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-easel"></i> Teacher Dashboard
+                </a>
+            {% endif %}
+            <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">
+                <i class="bi bi-search"></i> Browse Courses
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="card h-100 stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Enrolled Courses</h6>
+                            <h2 class="mb-0">{{ enrolled_courses.count }}</h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="card h-100 stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Completed Lessons</h6>
+                            <h2 class="mb-0">{{ completed_lessons }}</h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4 mb-md-0">
+            <div class="card h-100 stat-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Hours Learned</h6>
+                            <h2 class="mb-0">{{ hours_learned }}</h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100 stat-card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-dark-50">Achievements</h6>
+                            <h2 class="mb-0">{{ achievements_count }}</h2>
+                        </div>
+                        <div class="icon">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- My Courses Section -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">My Courses</h5>
+                </div>
+                <div class="card-body">
+                    {% if enrolled_courses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Course</th>
+                                        <th>Progress</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for enrollment in enrolled_courses %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ enrollment.course.image.url|default:'/static/images/course-placeholder.jpg' }}" alt="{{ enrollment.course.title }}" class="rounded me-3" width="50" height="50">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ enrollment.course.title }}</h6>
+                                                        <small class="text-muted">{{ enrollment.course.teacher.user.get_full_name|default:enrollment.course.teacher.user.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style="width: 30%;">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2">
+                                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ enrollment.progress }}%"></div>
+                                                    </div>
+                                                    <span>{{ enrollment.progress }}%</span>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="{% url 'frontend:course_detail' enrollment.course.id %}" class="btn btn-sm btn-outline-primary">
+                                                    Continue
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3">You're not enrolled in any courses yet</h5>
+                            <p class="text-muted">Start your French learning journey today!</p>
+                            <a href="{% url 'frontend:course_list' %}" class="btn btn-primary mt-2">Browse Courses</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Assignments & Quizzes Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Pending Assignments & Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_tasks %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Course</th>
+                                        <th>Due Date</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in pending_tasks %}
+                                        <tr>
+                                            <td>
+                                                {% if task.type == 'assignment' %}
+                                                    <i class="bi bi-journal-check text-primary me-2"></i>
+                                                {% elif task.type == 'quiz' %}
+                                                    <i class="bi bi-question-circle text-warning me-2"></i>
+                                                {% endif %}
+                                                {{ task.title }}
+                                            </td>
+                                            <td>{{ task.course.title }}</td>
+                                            <td>
+                                                {% if task.is_overdue %}
+                                                    <span class="text-danger">{{ task.due_date|date:"M d, Y" }} (Overdue)</span>
+                                                {% else %}
+                                                    <span>{{ task.due_date|date:"M d, Y" }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                <a href="#" class="btn btn-sm btn-primary">Start</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-check2-all text-success" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">No pending assignments or quizzes. You're all caught up!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ request.user.profile.picture.url|default:'/static/images/default-avatar.jpg' }}" alt="{{ request.user.username }}" class="rounded-circle mb-3" width="100" height="100">
+                    <h5>{{ request.user.get_full_name|default:request.user.username }}</h5>
+                    <p class="text-muted">{{ request.user.profile.bio|truncatechars:100|default:"French language enthusiast" }}</p>
+                    <div class="d-grid">
+                        <a href="#" class="btn btn-outline-secondary btn-sm">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Notifications</h5>
+                    <span class="badge bg-primary rounded-pill">{{ notifications|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if notifications %}
+                        <div class="notification-list">
+                            {% for notification in notifications %}
+                                <div class="notification-item p-3">
+                                    <div class="d-flex">
+                                        <div class="flex-shrink-0">
+                                            {% if notification.type == 'assignment' %}
+                                                <div class="bg-warning text-dark rounded-circle p-2">
+                                                    <i class="bi bi-journal-check"></i>
+                                                </div>
+                                            {% elif notification.type == 'message' %}
+                                                <div class="bg-primary text-white rounded-circle p-2">
+                                                    <i class="bi bi-envelope"></i>
+                                                </div>
+                                            {% elif notification.type == 'system' %}
+                                                <div class="bg-info text-white rounded-circle p-2">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ms-3">
+                                            <p class="mb-1">{{ notification.message }}</p>
+                                            <small class="text-muted">{{ notification.timestamp }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="p-3 text-center border-top">
+                            <a href="#" class="small">View All Notifications</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-bell text-muted" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">No new notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Learning Streak -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Learning Streak</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 text-warning mb-3">
+                        <i class="bi bi-fire"></i>
+                    </div>
+                    <h3 class="mb-2">{{ streak_days }} Days</h3>
+                    <p class="text-muted">Keep your streak going by studying every day!</p>
+                    <div class="d-flex justify-content-center mt-3">
+                        <div class="px-2 text-center">
+                            <div class="bg-success rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <small>Mon</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-success rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <small>Tue</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-success rounded-circle text-white d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-check"></i>
+                            </div>
+                            <small>Wed</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-circle text-muted"></i>
+                            </div>
+                            <small>Thu</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-circle text-muted"></i>
+                            </div>
+                            <small>Fri</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-circle text-muted"></i>
+                            </div>
+                            <small>Sat</small>
+                        </div>
+                        <div class="px-2 text-center">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 30px; height: 30px;">
+                                <i class="bi bi-circle text-muted"></i>
+                            </div>
+                            <small>Sun</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommended Courses -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Recommended for You</h5>
+                </div>
+                <div class="card-body">
+                    {% if recommended_courses %}
+                        {% for course in recommended_courses %}
+                            <div class="d-flex mb-3">
+                                <img src="{{ course.image.url|default:'/static/images/course-placeholder.jpg' }}" alt="{{ course.title }}" class="rounded me-3" width="60" height="60">
+                                <div>
+                                    <h6 class="mb-1">{{ course.title }}</h6>
+                                    <div class="text-warning small">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                        <span class="text-muted ms-1">4.5 (120)</span>
+                                    </div>
+                                    <a href="{% url 'frontend:course_detail' course.id %}" class="btn btn-sm btn-outline-primary mt-2">View</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-lightbulb text-warning" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">Complete more courses to get personalized recommendations</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

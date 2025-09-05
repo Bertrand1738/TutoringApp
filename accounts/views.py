@@ -10,6 +10,32 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
+    def create(self, request, *args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Log incoming data (without password)
+            data = request.data.copy()
+            if 'password' in data:
+                data['password'] = '******'
+            logger.info(f"Registration request received: {data}")
+            
+            # Create the user with standard DRF logic
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            
+            # Return the response
+            logger.info(f"User created successfully: {user.username}")
+            return Response(serializer.data, status=201, headers=headers)
+            
+        except Exception as e:
+            logger.error(f"Registration error: {str(e)}")
+            # Let DRF handle the exception with its standard error responses
+            raise
+    
     def perform_create(self, serializer):
         user = serializer.save()
         # Profile will be created automatically via signals

@@ -18,7 +18,7 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     teacher = serializers.PrimaryKeyRelatedField(read_only=True)
-    teacher_name = serializers.CharField(source='teacher.user.get_full_name', read_only=True)
+    teacher_name = serializers.SerializerMethodField()
     category = CourseCategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=CourseCategory.objects.all(),
@@ -27,6 +27,13 @@ class CourseSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    
+    def get_teacher_name(self, obj):
+        if obj.teacher and obj.teacher.user:
+            if obj.teacher.user.get_full_name():
+                return obj.teacher.user.get_full_name()
+            return obj.teacher.user.username
+        return ""
 
     class Meta:
         model = Course

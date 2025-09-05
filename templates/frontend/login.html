@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    .login-btn {
+        height: 48px;
+    }
+    
+    .social-login-btn {
+        padding: 10px 16px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        margin-right: 10px;
+        font-weight: 500;
+    }
+    
+    .social-login-btn i {
+        margin-right: 8px;
+    }
+    
+    .social-login-btn.google {
+        background-color: #DB4437;
+    }
+    
+    .social-login-btn.facebook {
+        background-color: #3b5998;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="card-title mb-0 text-center">Welcome Back</h4>
+                </div>
+                
+                {% if request.GET.registered %}
+                <div class="alert alert-success m-3">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Registration successful! Please login with your new account.
+                </div>
+                {% endif %}
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-danger d-none" id="login-error" role="alert">
+                        <!-- Error messages will be inserted here -->
+                    </div>
+                    
+                    <form id="login-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="id_username" name="username" placeholder="Enter your username" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="id_password" name="password" placeholder="Enter your password" required>
+                                <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="remember-me">
+                                <label class="form-check-label" for="remember-me">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#" class="text-decoration-none">Forgot password?</a>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary login-btn">
+                                <span>Login</span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center my-4">
+                        <p class="text-muted">or continue with</p>
+                        <div>
+                            <a href="#" class="social-login-btn google">
+                                <i class="bi bi-google"></i> Google
+                            </a>
+                            <a href="#" class="social-login-btn facebook">
+                                <i class="bi bi-facebook"></i> Facebook
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white py-3 text-center">
+                    <p class="mb-0">Don't have an account? <a href="{% url 'frontend:register' %}" class="text-decoration-none fw-bold">Register</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Override the login endpoint directly on this page
+    if (window.api) {
+        window.api.login = async function(username, password) {
+            // Login endpoint doesn't need auth header, so using custom headers
+            try {
+                // Use token endpoint directly (clearer logging)
+                const loginUrl = '/api/auth/login/';
+                console.log('Attempting login at endpoint:', loginUrl);
+                
+                // Include CSRF token in the request
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                
+                const response = await fetch(loginUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                console.log('Login response status:', response.status);
+                
+                if (!response.ok) {
+                    console.error('Login failed with status:', response.status);
+                    console.error('Error details:', data);
+                    throw new Error(data.detail || 'Login failed');
+                }
+                
+                if (data.access) {
+                    console.log('Login successful, storing tokens');
+                    localStorage.setItem('token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Login error:', error);
+                throw error;
+            }
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const togglePassword = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('id_password');
+        
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle eye icon
+                const eyeIcon = togglePassword.querySelector('i');
+                eyeIcon.classList.toggle('bi-eye');
+                eyeIcon.classList.toggle('bi-eye-slash');
+            });
+        }
+        
+        // Direct form submission handler - override the default
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('id_username').value;
+                const password = document.getElementById('id_password').value;
+                const errorContainer = document.getElementById('login-error');
+                const submitButton = loginForm.querySelector('button[type="submit"]');
+                
+                // Clear any previous errors
+                errorContainer.classList.add('d-none');
+                errorContainer.textContent = '';
+                
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+                
+                try {
+                    console.log('Attempting login using API service');
+                    console.log('Username:', username); // Only log username, not password
+                    
+                    // Use the API service to login
+                    const data = await api.login(username, password);
+                    
+                    if (data && data.access) {
+                        console.log('Login successful, got access token');
+                        
+                        // Store tokens in localStorage for API calls
+                        localStorage.setItem('token', data.access);
+                        localStorage.setItem('refresh_token', data.refresh);
+                        localStorage.setItem('access_token', data.access);
+                        
+                        // Also store in sessionStorage for the current session
+                        sessionStorage.setItem('access_token', data.access);
+                        
+                        // Show success message before redirecting
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'alert alert-success';
+                        successMsg.textContent = 'Login successful! Redirecting...';
+                        errorContainer.parentNode.insertBefore(successMsg, errorContainer);
+                        
+                        // Now we need to synchronize the JWT token with Django's session
+                        try {
+                            // First, create a cookie with the token (this will help our middleware)
+                            document.cookie = `access_token=${data.access}; path=/; max-age=${60*60*24}; SameSite=Lax`;
+                            
+                            // Make a request to Django's login endpoint with the token
+                            const sessionLoginResponse = await fetch('/login/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'X-CSRFToken': csrfToken,
+                                    'Authorization': `Bearer ${data.access}`
+                                },
+                                body: new URLSearchParams({
+                                    'username': username,
+                                    'password': password,
+                                    'csrfmiddlewaretoken': csrfToken,
+                                    'token': data.access  // Also include token in form data
+                                }),
+                                credentials: 'same-origin' // Include cookies for session
+                            });
+                            
+                            // Now redirect to dashboard with the token as a query param as fallback
+                            setTimeout(() => {
+                                // Try to redirect with token in the URL as a last resort
+                                window.location.href = `/dashboard/?token=${data.access}`;
+                            }, 1500);
+                            
+                        } catch (sessionError) {
+                            console.warn('Session login had an error:', sessionError);
+                            // Still redirect to dashboard with token in URL
+                            setTimeout(() => {
+                                window.location.href = `/dashboard/?token=${data.access}`;
+                            }, 1500);
+                        }
+                    } else {
+                        // Display error message from server
+                        const errorMsg = data.detail || 'Invalid username or password';
+                        errorContainer.textContent = errorMsg;
+                        errorContainer.classList.remove('d-none');
+                        
+                        // Reset button
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Login';
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    
+                    // Display error message
+                    errorContainer.textContent = 'Login failed. Please try again. ' + (error.message || '');
+                    errorContainer.classList.remove('d-none');
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Login';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

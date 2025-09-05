@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-4 dashboard-sidebar py-4">
+            <h4 class="mb-4 px-3">{% if is_teacher %}Teacher{% else %}Student{% endif %} Dashboard</h4>
+            {% block dashboard_sidebar %}{% endblock %}
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9 col-md-8 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+                {% block dashboard_action_button %}{% endblock %}
+            </div>
+            
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

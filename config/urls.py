@@ -22,12 +22,16 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # API URLs
     path("api/auth/", include("accounts.urls", namespace="accounts")),
     path("api/", include(("courses.urls", "courses"), namespace="courses")),
     path("api/payments/", include("payments.urls", namespace="payments")),
     path("api/enrollments/", include("enrollments.urls", namespace="enrollments")),
     path("api/live/", include("live_sessions.urls", namespace="live_sessions")),
     # reviews, badges will be added next
+    
+    # Frontend URLs
+    path('', include('frontend.urls', namespace='frontend')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
