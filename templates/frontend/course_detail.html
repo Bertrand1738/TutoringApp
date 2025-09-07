@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 
 {% block title %}{{ course.title }} - French Tutor Hub{% endblock %}
 
 {% block extra_css %}
 <style>
     .course-header {
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/img/course-header.jpg');
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "img/course-header.jpg" %}');
         background-size: cover;
         background-position: center;
         padding: 80px 0;
@@ -55,7 +56,7 @@
                 <h1 class="display-5">{{ course.title }}</h1>
                 <p class="lead">{{ course.description|truncatewords:30 }}</p>
                 <div class="d-flex align-items-center">
-                    <img src="{{ course.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle me-2" width="40" height="40">
+                    <img src="{{ course.teacher.profile_picture.url|default:'' }}{% if not course.teacher.profile_picture %}{% static 'img/default-avatar.png' %}{% endif %}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle me-2" width="40" height="40">
                     <span>By {{ course.teacher.user.get_full_name|default:course.teacher.user.username }}</span>
                 </div>
             </div>
@@ -275,7 +276,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3 text-center">
-                                <img src="{{ course.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                                <img src="{{ course.teacher.profile_picture.url|default:'' }}{% if not course.teacher.profile_picture %}{% static 'img/default-avatar.png' %}{% endif %}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
                             </div>
                             <div class="col-md-9">
                                 <h4>{{ course.teacher.user.get_full_name|default:course.teacher.user.username }}</h4>
@@ -326,7 +327,7 @@
                 <div class="card shadow-sm mb-3">
                     <div class="card-body">
                         <div class="d-flex mb-3">
-                            <img src="/static/img/default-avatar.png" alt="Student" class="rounded-circle me-3" width="50" height="50">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Student" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h5 class="mb-1">Marie Johnson</h5>
                                 <div class="text-warning mb-1">
@@ -346,7 +347,7 @@
                 <div class="card shadow-sm mb-3">
                     <div class="card-body">
                         <div class="d-flex mb-3">
-                            <img src="/static/img/default-avatar.png" alt="Student" class="rounded-circle me-3" width="50" height="50">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Student" class="rounded-circle me-3" width="50" height="50">
                             <div>
                                 <h5 class="mb-1">Alex Thompson</h5>
                                 <div class="text-warning mb-1">
@@ -381,7 +382,7 @@
                     {% for related_course in related_courses %}
                         <div class="d-flex mb-3">
                             <div class="flex-shrink-0">
-                                <img src="{{ related_course.image.url|default:'/static/img/course-thumbnail.jpg' }}" alt="{{ related_course.title }}" width="70" height="70" class="rounded">
+                                <img src="{{ related_course.image.url|default:'' }}{% if not related_course.image %}{% static 'img/course-thumbnail.jpg' %}{% endif %}" alt="{{ related_course.title }}" width="70" height="70" class="rounded">
                             </div>
                             <div class="ms-3">
                                 <h6 class="mb-0">{{ related_course.title }}</h6>

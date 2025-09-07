@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Bank Transfer Instructions - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bank-transfer-container {
+        max-width: 800px;
+        margin: 60px auto;
+    }
+    
+    .info-icon {
+        font-size: 5rem;
+        color: #0d6efd;
+    }
+    
+    .bank-details {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .bank-details-table tr td:first-child {
+        font-weight: bold;
+        width: 160px;
+    }
+    
+    .reference-box {
+        font-family: monospace;
+        font-size: 1.1rem;
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    
+    .action-button {
+        min-width: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container bank-transfer-container">
+    <div class="text-center mb-5">
+        <i class="bi bi-bank info-icon mb-3"></i>
+        <h1 class="display-4">Bank Transfer Instructions</h1>
+        <p class="lead">Please complete your payment using the bank details below.</p>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Order #{{ order.id }} Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F j, Y" }}</p>
+                    <p class="mb-1"><strong>Status:</strong> <span class="badge bg-warning">Pending Bank Transfer</span></p>
+                    <p class="mb-0"><strong>Total Amount:</strong> €{{ order.total_amount }}</p>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <div class="d-flex">
+                    <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                    <div>
+                        <p class="mb-1">Please transfer the exact amount of <strong>€{{ order.total_amount }}</strong> to the bank account listed below.</p>
+                        <p class="mb-0">Include the reference code in your transaction so we can identify your payment.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mt-4 mb-3">Bank Account Details</h5>
+            <div class="bank-details mb-4">
+                <table class="table bank-details-table">
+                    <tbody>
+                        <tr>
+                            <td>Bank Name</td>
+                            <td>EuroBank</td>
+                        </tr>
+                        <tr>
+                            <td>Account Name</td>
+                            <td>French Tutor Hub Ltd</td>
+                        </tr>
+                        <tr>
+                            <td>IBAN</td>
+                            <td>FR76 3000 1007 1600 0000 9345 121</td>
+                        </tr>
+                        <tr>
+                            <td>BIC/SWIFT</td>
+                            <td>BNPAFRPPXXX</td>
+                        </tr>
+                        <tr>
+                            <td>Reference Code</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="reference-box me-2">ORDER-{{ order.id }}</div>
+                                    <button class="btn btn-sm btn-outline-primary copy-reference" data-reference="ORDER-{{ order.id }}">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h5 class="mb-3">Items in Your Order</h5>
+            <ul class="list-group mb-4">
+                {% for item in order.items.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">{{ item.name }}</h6>
+                        <small class="text-muted">{{ item.content_type.name }}</small>
+                    </div>
+                    <span>€{{ item.price }}</span>
+                </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <strong>Total</strong>
+                    <strong>€{{ order.total_amount }}</strong>
+                </li>
+            </ul>
+            
+            <div class="alert alert-warning">
+                <div class="d-flex">
+                    <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                    <div>
+                        <h6 class="mb-1">Important Information</h6>
+                        <p class="mb-1">Your order will be processed after we have received and verified your payment.</p>
+                        <p class="mb-0">This typically takes 1-2 business days after the transfer is completed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center">
+        <p>If you have any questions about your order or payment, please contact us at <a href="mailto:support@frenchtutor-hub.com">support@frenchtutor-hub.com</a></p>
+        <div class="mt-4">
+            <a href="{% url 'frontend:dashboard' %}" class="btn btn-outline-primary me-3 action-button">
+                <i class="bi bi-speedometer2"></i> Go to Dashboard
+            </a>
+            <a href="{% url 'frontend:store' %}" class="btn btn-primary action-button">
+                <i class="bi bi-shop"></i> Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy reference code functionality
+        document.querySelector('.copy-reference').addEventListener('click', function() {
+            const reference = this.dataset.reference;
+            navigator.clipboard.writeText(reference).then(() => {
+                // Update button text temporarily
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+                this.classList.add('btn-success');
+                this.classList.remove('btn-outline-primary');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-primary');
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -8,7 +8,7 @@
                 <div class="card-header pb-0">
                     <div class="d-flex justify-content-between">
                         <h6>My Schedule</h6>
-                        <a href="#" class="btn btn-primary btn-sm">Book a Session</a>
+                        <a href="{% url 'frontend:book_session' %}" class="btn btn-primary btn-sm">Book a Session</a>
                     </div>
                 </div>
                 <div class="card-body px-0 pt-0 pb-2">
@@ -101,19 +101,56 @@
                                     {% for session in upcoming_sessions %}
                                     <div class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
-                                            <h6 class="mb-1">{{ session.course.name }}</h6>
-                                            <small>{{ session.date|date:"M d" }}, {{ session.start_time|time:"H:i" }}</small>
+                                            <h6 class="mb-1">{{ session.course.title }}</h6>
+                                            <small>{{ session.time_slot.start_time|date:"M d" }}, {{ session.time_slot.start_time|time:"H:i" }}</small>
                                         </div>
-                                        <p class="mb-1">{{ session.title }}</p>
+                                        <p class="mb-1">{{ session.student_notes|truncatechars:50 }}</p>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted">
                                                 {% if is_teacher %}With: {{ session.student.get_full_name }}
-                                                {% else %}With: {{ session.teacher.get_full_name }}
+                                                {% else %}With: {{ session.course.teacher.user.get_full_name }}
                                                 {% endif %}
                                             </small>
                                             <div>
-                                                <a href="#" class="btn btn-sm btn-primary">Join</a>
-                                                <a href="#" class="btn btn-sm btn-outline-secondary">Details</a>
+                                                <a href="{{ session.meeting_url }}" target="_blank" class="btn btn-sm btn-primary">Join</a>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#sessionModal{{ session.id }}">Details</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Session Details Modal -->
+                                    <div class="modal fade" id="sessionModal{{ session.id }}" tabindex="-1" aria-labelledby="sessionModalLabel{{ session.id }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="sessionModalLabel{{ session.id }}">Session Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <h6>{{ session.course.title }}</h6>
+                                                    <p><strong>Date & Time:</strong> {{ session.time_slot.start_time|date:"F d, Y" }} at {{ session.time_slot.start_time|time:"g:i A" }} - {{ session.time_slot.end_time|time:"g:i A" }}</p>
+                                                    <p><strong>Meeting Platform:</strong> {{ session.meeting_platform|title }}</p>
+                                                    <p><strong>Meeting ID:</strong> {{ session.meeting_id }}</p>
+                                                    {% if session.meeting_password %}
+                                                    <p><strong>Password:</strong> {{ session.meeting_password }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if session.student_notes %}
+                                                    <hr>
+                                                    <h6>Student Notes</h6>
+                                                    <p>{{ session.student_notes }}</p>
+                                                    {% endif %}
+                                                    
+                                                    {% if session.teacher_notes %}
+                                                    <hr>
+                                                    <h6>Teacher Notes</h6>
+                                                    <p>{{ session.teacher_notes }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <a href="{{ session.meeting_url }}" target="_blank" class="btn btn-primary">Join Session</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -121,10 +158,12 @@
                                 </div>
                             {% else %}
                                 <div class="text-center p-5">
-                                    <img src="/static/img/illustrations/no-events.svg" class="img-fluid mb-3" style="max-height: 150px;" alt="No upcoming sessions">
+                                    <div class="display-1 text-muted">
+                                        <i class="bi bi-calendar-x"></i>
+                                    </div>
                                     <h5>No Upcoming Sessions</h5>
                                     <p class="text-secondary">You don't have any scheduled sessions at the moment.</p>
-                                    <a href="#" class="btn btn-primary">Book a Session</a>
+                                    <a href="{% url 'frontend:book_session' %}" class="btn btn-primary">Book a Session</a>
                                 </div>
                             {% endif %}
                         </div>

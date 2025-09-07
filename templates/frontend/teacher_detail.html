@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ teacher.user.first_name }} {{ teacher.user.last_name }} - French Tutor {% endblock %}
+
+{% block extra_css %}
+<style>
+    .teacher-avatar {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+    }
+    .rating-stars {
+        color: #ffc107;
+    }
+    .teacher-stats {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .timeslot-card {
+        transition: all 0.2s;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .timeslot-card:hover {
+        border-color: #0d6efd;
+        background-color: #f0f7ff;
+    }
+    .timeslot-card.selected {
+        border-color: #0d6efd;
+        background-color: #e6f2ff;
+    }
+    .date-nav-button {
+        border: none;
+        background-color: #f8f9fa;
+        color: #495057;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .date-nav-button:hover {
+        background-color: #e9ecef;
+        color: #0d6efd;
+    }
+    .date-card {
+        width: 80px;
+        text-align: center;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .date-card:hover {
+        background-color: #e9ecef;
+    }
+    .date-card.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+    .date-card .weekday {
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    .date-card .day {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    .date-card .month {
+        font-size: 0.8rem;
+    }
+    .review-item {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    .review-item:last-child {
+        border-bottom: none;
+    }
+    .course-card {
+        transition: transform 0.3s;
+    }
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Teacher header -->
+    <div class="row mb-5">
+        <div class="col-lg-3 text-center text-lg-start">
+            <img src="{% static 'img/default-avatar.png' %}" alt="{{ teacher.user.first_name }}" class="teacher-avatar">
+        </div>
+        <div class="col-lg-9">
+            <h1 class="mb-2">{{ teacher.user.first_name }} {{ teacher.user.last_name }}</h1>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="rating-stars me-2">
+                    {% with ''|center:review_stats.avg_rating|make_list as stars %}
+                        {% for _ in stars %}
+                            <i class="bi bi-star-fill"></i>
+                        {% endfor %}
+                        {% with ''|center:5|make_list as total_stars %}
+                            {% for _ in total_stars|slice:review_stats.avg_rating %}
+                                <i class="bi bi-star text-muted"></i>
+                            {% endfor %}
+                        {% endwith %}
+                    {% endwith %}
+                </div>
+                <span class="text-muted">{{ review_stats.avg_rating|floatformat:1 }} ({{ review_stats.count }} reviews)</span>
+            </div>
+            
+            <div class="mb-4">
+                <p class="lead">{{ teacher.bio }}</p>
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-md-3">
+                    <div class="teacher-stats text-center">
+                        <div class="display-6 fw-bold text-primary">{{ courses.count }}</div>
+                        <div class="text-muted">Courses</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="teacher-stats text-center">
+                        <div class="display-6 fw-bold text-primary">{{ review_stats.count }}</div>
+                        <div class="text-muted">Reviews</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="teacher-stats text-center">
+                        <div class="display-6 fw-bold text-primary">
+                            {% if review_stats.avg_rating %}
+                                {{ review_stats.avg_rating|floatformat:1 }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                        <div class="text-muted">Rating</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="teacher-stats text-center">
+                        <div class="display-6 fw-bold text-primary">
+                            {% if slots_by_day.items|length > 0 %}
+                                {{ slots_by_day.items|length }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </div>
+                        <div class="text-muted">Available Days</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex">
+                <a href="#book-session" class="btn btn-primary btn-lg">Book a Session</a>
+                <a href="#courses" class="btn btn-outline-secondary btn-lg">View Courses</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content tabs -->
+    <ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="booking-tab" data-bs-toggle="tab" data-bs-target="#booking" type="button" role="tab" aria-controls="booking" aria-selected="true">Book a Session</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab" aria-controls="courses" aria-selected="false">Courses</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">Reviews</button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="teacherTabsContent">
+        <!-- Booking Tab -->
+        <div class="tab-pane fade show active" id="booking" role="tabpanel" aria-labelledby="booking-tab">
+            <div id="book-session" class="card">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Book a Session with {{ teacher.user.first_name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if not slots_by_day %}
+                        <div class="alert alert-info text-center py-4">
+                            <i class="bi bi-calendar-x display-4 d-block mb-3"></i>
+                            <h4>No Available Sessions</h4>
+                            <p>{{ teacher.user.first_name }} doesn't have any available time slots currently.</p>
+                            <a href="{% url 'frontend:teacher_list' %}" class="btn btn-primary mt-2">Find Another Teacher</a>
+                        </div>
+                    {% else %}
+                        <form action="{% url 'frontend:create_session' %}" method="post" id="booking-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="teacher_id" value="{{ teacher.id }}">
+                            <input type="hidden" name="time_slot_id" id="selected_time_slot" value="">
+                            <input type="hidden" name="course_id" id="selected_course" value="">
+                            
+                            <!-- Course selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Select a Course</label>
+                                <div class="row g-3">
+                                    {% for course in courses %}
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card h-100 course-option" data-course-id="{{ course.id }}">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">{{ course.title }}</h5>
+                                                    <p class="card-text small">{{ course.description|truncatechars:100 }}</p>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="badge bg-primary">€{{ course.price }}</span>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input course-radio" type="radio" name="course_radio" id="course_{{ course.id }}" value="{{ course.id }}">
+                                                            <label class="form-check-label" for="course_{{ course.id }}">
+                                                                Select
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="invalid-feedback" id="course-error">Please select a course</div>
+                            </div>
+                            
+                            <!-- Date selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Select a Date</label>
+                                <div class="date-selector position-relative">
+                                    <button type="button" class="date-nav-button position-absolute start-0 top-50 translate-middle-y" id="prev-dates">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </button>
+                                    
+                                    <div class="d-flex flex-nowrap overflow-auto px-5" id="date-slider">
+                                        {% for day in days %}
+                                            <div class="date-card me-2 {% if day == today %}active{% endif %}" data-date="{{ day|date:'Y-m-d' }}">
+                                                <div class="weekday">{{ day|date:'D' }}</div>
+                                                <div class="day">{{ day|date:'d' }}</div>
+                                                <div class="month">{{ day|date:'M' }}</div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <button type="button" class="date-nav-button position-absolute end-0 top-50 translate-middle-y" id="next-dates">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Time slots -->
+                            <div class="mb-4">
+                                <label class="form-label">Select a Time Slot</label>
+                                <div class="time-slots">
+                                    {% for date, slots in slots_by_day.items %}
+                                        <div class="date-slots" data-date="{{ date|date:'Y-m-d' }}" {% if date != today %}style="display: none;"{% endif %}>
+                                            {% if slots %}
+                                                <div class="row g-2">
+                                                    {% for slot in slots %}
+                                                        <div class="col-md-3 col-6">
+                                                            <div class="card timeslot-card text-center p-2" data-slot-id="{{ slot.id }}">
+                                                                <div class="time">{{ slot.start_time|date:'g:i A' }} - {{ slot.end_time|date:'g:i A' }}</div>
+                                                                <div class="form-check mt-2">
+                                                                    <input class="form-check-input timeslot-radio" type="radio" name="timeslot_radio" id="timeslot_{{ slot.id }}" value="{{ slot.id }}">
+                                                                    <label class="form-check-label" for="timeslot_{{ slot.id }}">
+                                                                        Select
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-light text-center">
+                                                    No available slots for this date.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                    
+                                    {% if not slots_by_day %}
+                                        <div class="alert alert-light text-center">
+                                            No available time slots.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="invalid-feedback" id="timeslot-error">Please select a time slot</div>
+                            </div>
+                            
+                            <!-- Notes for teacher -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label">Notes for the Teacher (Optional)</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Tell the teacher what you'd like to focus on in this session..."></textarea>
+                            </div>
+                            
+                            <!-- Submit button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="book-button">Book Session</button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Courses Tab -->
+        <div class="tab-pane fade" id="courses" role="tabpanel" aria-labelledby="courses-tab">
+            <div class="row g-4">
+                {% for course in courses %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card course-card h-100">
+                            <img src="{{ course.image.url|default:'/static/images/course-default.jpg' }}" class="card-img-top" alt="{{ course.title }}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ course.title }}</h5>
+                                <p class="card-text flex-grow-1">{{ course.description|truncatechars:150 }}</p>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-light text-dark">{{ course.category.name|default:'General' }}</span>
+                                    <strong class="text-primary">€{{ course.price }}</strong>
+                                </div>
+                                <div class="d-grid">
+                                    <a href="{% url 'frontend:course_detail' course.id %}" class="btn btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-light text-center py-5">
+                            <i class="bi bi-mortarboard display-4 d-block mb-3"></i>
+                            <h4>No Courses Available</h4>
+                            <p>{{ teacher.user.first_name }} hasn't published any courses yet.</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Reviews Tab -->
+        <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Student Reviews</h5>
+                    <div class="rating-summary">
+                        <span class="rating-stars">
+                            {% with ''|center:review_stats.avg_rating|make_list as stars %}
+                                {% for _ in stars %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% endfor %}
+                                {% with ''|center:5|make_list as total_stars %}
+                                    {% for _ in total_stars|slice:review_stats.avg_rating %}
+                                        <i class="bi bi-star text-muted"></i>
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endwith %}
+                        </span>
+                        <span class="ms-2">{{ review_stats.avg_rating|floatformat:1 }} out of 5</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                            <div class="review-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-0">{{ review.student.username }}</h6>
+                                        <div class="small text-muted">{{ review.created_at|date:"F j, Y" }}</div>
+                                    </div>
+                                    <div class="rating-stars">
+                                        {% with ''|center:review.rating|make_list as stars %}
+                                            {% for _ in stars %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% endfor %}
+                                            {% with ''|center:5|make_list as total_stars %}
+                                                {% for _ in total_stars|slice:review.rating %}
+                                                    <i class="bi bi-star text-muted"></i>
+                                                {% endfor %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <p class="mb-1">{{ review.comment }}</p>
+                                {% if review.course %}
+                                    <div class="small text-muted">Course: {{ review.course.title }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-square-text display-4 text-muted"></i>
+                            <p class="mt-3">No reviews yet. Be the first to leave a review!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Course selection
+    const courseCards = document.querySelectorAll('.course-option');
+    const courseRadios = document.querySelectorAll('.course-radio');
+    const selectedCourseInput = document.getElementById('selected_course');
+    
+    courseCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const courseId = this.dataset.courseId;
+            const radio = document.getElementById('course_' + courseId);
+            radio.checked = true;
+            
+            // Update hidden input
+            selectedCourseInput.value = courseId;
+            
+            // Update UI
+            courseCards.forEach(c => c.classList.remove('border-primary'));
+            this.classList.add('border-primary');
+        });
+    });
+    
+    courseRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedCourseInput.value = this.value;
+            
+            // Update UI
+            courseCards.forEach(c => c.classList.remove('border-primary'));
+            const card = document.querySelector(`.course-option[data-course-id="${this.value}"]`);
+            if (card) card.classList.add('border-primary');
+        });
+    });
+    
+    // Date selection
+    const dateCards = document.querySelectorAll('.date-card');
+    const dateSlots = document.querySelectorAll('.date-slots');
+    
+    dateCards.forEach(dateCard => {
+        dateCard.addEventListener('click', function() {
+            const selectedDate = this.dataset.date;
+            
+            // Update UI for date selection
+            dateCards.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show slots for selected date
+            dateSlots.forEach(slot => {
+                if (slot.dataset.date === selectedDate) {
+                    slot.style.display = 'block';
+                } else {
+                    slot.style.display = 'none';
+                }
+            });
+            
+            // Reset time slot selection
+            document.querySelectorAll('.timeslot-card').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            document.querySelectorAll('.timeslot-radio').forEach(radio => {
+                radio.checked = false;
+            });
+            document.getElementById('selected_time_slot').value = '';
+        });
+    });
+    
+    // Date navigation
+    const dateSlider = document.getElementById('date-slider');
+    const prevDatesBtn = document.getElementById('prev-dates');
+    const nextDatesBtn = document.getElementById('next-dates');
+    
+    prevDatesBtn.addEventListener('click', () => {
+        dateSlider.scrollBy({
+            left: -300,
+            behavior: 'smooth'
+        });
+    });
+    
+    nextDatesBtn.addEventListener('click', () => {
+        dateSlider.scrollBy({
+            left: 300,
+            behavior: 'smooth'
+        });
+    });
+    
+    // Time slot selection
+    const timeslotCards = document.querySelectorAll('.timeslot-card');
+    const timeslotRadios = document.querySelectorAll('.timeslot-radio');
+    const selectedTimeslotInput = document.getElementById('selected_time_slot');
+    
+    timeslotCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const slotId = this.dataset.slotId;
+            const radio = document.getElementById('timeslot_' + slotId);
+            radio.checked = true;
+            
+            // Update hidden input
+            selectedTimeslotInput.value = slotId;
+            
+            // Update UI
+            timeslotCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+    
+    timeslotRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedTimeslotInput.value = this.value;
+            
+            // Update UI
+            timeslotCards.forEach(c => c.classList.remove('selected'));
+            const card = document.querySelector(`.timeslot-card[data-slot-id="${this.value}"]`);
+            if (card) card.classList.add('selected');
+        });
+    });
+    
+    // Form validation
+    const bookingForm = document.getElementById('booking-form');
+    const courseError = document.getElementById('course-error');
+    const timeslotError = document.getElementById('timeslot-error');
+    
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // Validate course selection
+            if (!selectedCourseInput.value) {
+                isValid = false;
+                courseError.style.display = 'block';
+            } else {
+                courseError.style.display = 'none';
+            }
+            
+            // Validate time slot selection
+            if (!selectedTimeslotInput.value) {
+                isValid = false;
+                timeslotError.style.display = 'block';
+            } else {
+                timeslotError.style.display = 'none';
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

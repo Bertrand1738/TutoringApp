@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
@@ -82,15 +82,44 @@ class LiveSessionViewSet(viewsets.ModelViewSet):
         return queryset.filter(student=self.request.user)
 
     def perform_create(self, serializer):
+        # Get the course and time slot from the request
+        from courses.models import Course
+        from .models import TimeSlot
+        
+        course_id = self.request.data.get('course_id')
+        time_slot_id = self.request.data.get('time_slot_id')
+        
+        if not course_id or not time_slot_id:
+            raise serializers.ValidationError({
+                'detail': 'Course ID and Time Slot ID are required'
+            })
+            
+        try:
+            course = Course.objects.get(pk=course_id)
+            time_slot = TimeSlot.objects.get(pk=time_slot_id)
+        except (Course.DoesNotExist, TimeSlot.DoesNotExist):
+            raise serializers.ValidationError({
+                'detail': 'Invalid Course or Time Slot'
+            })
+            
         # Create Zoom/Meet meeting
-        meeting_info = self.create_meeting(serializer.validated_data)
+        meeting_platform = self.request.data.get('meeting_platform', 'zoom')
+        meeting_info = self.create_meeting({
+            'course': course,
+            'time_slot': time_slot,
+            'meeting_platform': meeting_platform
+        })
         
         # Save session with meeting details
         serializer.save(
             student=self.request.user,
+            course=course,
+            time_slot=time_slot,
+            meeting_platform=meeting_platform,
             meeting_url=meeting_info.get('join_url', ''),
             meeting_id=meeting_info.get('id', ''),
-            meeting_password=meeting_info.get('password', '')
+            meeting_password=meeting_info.get('password', ''),
+            student_notes=self.request.data.get('student_notes', '')
         )
 
     def create_meeting(self, data):

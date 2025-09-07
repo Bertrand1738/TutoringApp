@@ -1,0 +1,615 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .video-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "img/video-header.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 60px 0;
+        color: white;
+        margin-bottom: 30px;
+    }
+    
+    .video-player-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+        max-width: 100%;
+        background-color: #000;
+        margin-bottom: 20px;
+        border-radius: 10px;
+    }
+    
+    .video-player {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+    }
+    
+    .video-locked {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border-radius: 10px;
+    }
+    
+    .lock-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+    
+    .instructor-card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Video Header -->
+<section class="video-header">
+    <div class="container text-center">
+        <span class="badge bg-danger mb-2">Educational Video</span>
+        <h1 class="display-5">{{ video.title }}</h1>
+        <p class="lead">{{ video.description|truncatewords:25 }}</p>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8 mb-4">
+            <!-- Video Player -->
+            <div class="video-player-container">
+                {% if has_access %}
+                    <video class="video-player" controls poster="{{ video.thumbnail.url|default:'/static/img/video-thumbnail.jpg' }}">
+                        <source src="{{ video.file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                {% else %}
+                    <img src="{{ video.thumbnail.url|default:'/static/img/video-thumbnail.jpg' }}" alt="{{ video.title }}" class="video-player">
+                    <div class="video-locked">
+                        <i class="bi bi-lock-fill lock-icon"></i>
+                        <h3>Video Preview</h3>
+                        <p>Purchase this video to get full access</p>
+                        <button class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#purchaseModal">
+                            Purchase for €{{ video.price }}
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Video Details -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Video Information</h5>
+                </div>
+                <div class="card-body">
+                    <h4>{{ video.title }}</h4>
+                    <p>{{ video.description }}</p>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Duration:</strong> {{ video.duration|default:"45" }} minutes</p>
+                            <p><strong>Level:</strong> {{ video.level|default:"Intermediate" }}</p>
+                            <p><strong>Language:</strong> French</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Released:</strong> {{ video.created_at|date:"F j, Y" }}</p>
+                            <p><strong>Category:</strong> {{ video.category|default:"French Learning" }}</p>
+                            <p><strong>Subtitles:</strong> {{ video.has_subtitles|yesno:"Yes,No" }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>What You'll Learn</h5>
+                    <ul>
+                        <li>French vocabulary related to {{ video.topic|default:"the topic" }}</li>
+                        <li>Proper pronunciation and intonation</li>
+                        <li>Practical usage of key phrases</li>
+                        <li>Cultural context and nuances</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Transcripts Section (if available) -->
+            {% if has_access and video.has_transcript %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Video Transcript</h5>
+                </div>
+                <div class="card-body">
+                    <div class="transcript-content">
+                        {{ video.transcript|linebreaks }}
+                    </div>
+                    
+                    <button class="btn btn-outline-secondary mt-2">
+                        <i class="bi bi-download"></i> Download Transcript
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Reviews Section -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Reviews</h5>
+                    {% if has_access %}
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        Write a Review
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <!-- Example reviews -->
+                    <div class="mb-4">
+                        <div class="d-flex mb-2">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Reviewer" class="rounded-circle me-2" width="40" height="40">
+                            <div>
+                                <h6 class="mb-1">Sophie Martin</h6>
+                                <div class="text-warning">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                <small class="text-muted">2 weeks ago</small>
+                            </div>
+                        </div>
+                        <p>This video is excellent! The instructor explains everything clearly and the examples are very helpful for understanding the concepts.</p>
+                    </div>
+                    
+                    <div>
+                        <div class="d-flex mb-2">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Reviewer" class="rounded-circle me-2" width="40" height="40">
+                            <div>
+                                <h6 class="mb-1">Jean Dupont</h6>
+                                <div class="text-warning">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star"></i>
+                                </div>
+                                <small class="text-muted">1 month ago</small>
+                            </div>
+                        </div>
+                        <p>Very informative and well-structured. I would have liked more practice exercises, but overall it's a great learning resource.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Purchase Card (if not purchased) -->
+            {% if not has_access %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h4 class="card-title">Get Access Today</h4>
+                    <p class="display-5 text-primary mb-3">€{{ video.price }}</p>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> 
+                            Full video access
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Downloadable resources
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Video transcripts
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Lifetime access
+                        </li>
+                    </ul>
+                    <button class="btn btn-primary btn-lg w-100 mb-3" data-bs-toggle="modal" data-bs-target="#purchaseModal">
+                        Purchase Now
+                    </button>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-secondary btn-sm add-to-cart" data-id="{{ video.id }}" data-type="video">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <small class="text-muted">Secure payment with 30-day money-back guarantee</small>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Instructor Card -->
+            <div class="card shadow-sm instructor-card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">About the Instructor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img src="{{ video.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ video.teacher.user.get_full_name|default:'Instructor' }}" class="rounded-circle" width="100" height="100">
+                        <h5 class="mt-2">{{ video.teacher.user.get_full_name|default:"French Instructor" }}</h5>
+                        <p class="text-muted">{{ video.teacher.title|default:"French Language Expert" }}</p>
+                    </div>
+                    
+                    <p>{{ video.teacher.bio|default:"An experienced French language instructor with a passion for teaching and helping students achieve fluency. Specialized in making complex grammar concepts easy to understand." }}</p>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Videos:</span>
+                        <span>{{ video.teacher.videos.count|default:"12" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Students:</span>
+                        <span>{{ video.teacher.student_count|default:"450" }}+</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Rating:</span>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                            <small class="text-muted ms-1">4.8</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Related Videos -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Related Videos</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Example related videos -->
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0 position-relative">
+                            <img src="{% static 'img/video-thumbnail.jpg' %}" alt="Video Thumbnail" width="80" height="45" class="rounded">
+                            <span class="badge bg-dark position-absolute end-0 bottom-0">15:30</span>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 small">French Pronunciation Basics</h6>
+                            <small class="text-muted">€9.99</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0 position-relative">
+                            <img src="{% static 'img/video-thumbnail.jpg' %}" alt="Video Thumbnail" width="80" height="45" class="rounded">
+                            <span class="badge bg-dark position-absolute end-0 bottom-0">22:15</span>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 small">Common French Phrases for Travel</h6>
+                            <small class="text-muted">€12.99</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 position-relative">
+                            <img src="{% static 'img/video-thumbnail.jpg' %}" alt="Video Thumbnail" width="80" height="45" class="rounded">
+                            <span class="badge bg-dark position-absolute end-0 bottom-0">18:45</span>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="mb-0 small">French Verb Conjugation</h6>
+                            <small class="text-muted">€14.99</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchaseModalLabel">Purchase Video</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5>{{ video.title }}</h5>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-half"></i>
+                            <small class="text-muted ms-1">4.8</small>
+                        </div>
+                    </div>
+                    <h4 class="text-primary">€{{ video.price }}</h4>
+                </div>
+                
+                <hr>
+                
+                <form id="purchaseForm">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
+                            <label class="form-check-label" for="creditCard">Credit / Debit Card</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal">
+                            <label class="form-check-label" for="paypal">PayPal</label>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        By purchasing, you agree to our Terms of Service and Privacy Policy.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary direct-purchase" data-id="{{ video.id }}" data-type="video">
+                    Complete Purchase
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+{% if has_access %}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="d-flex">
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="rating" id="rating5" value="5">
+                                <label class="form-check-label" for="rating5">5 ⭐</label>
+                            </div>
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
+                                <label class="form-check-label" for="rating4">4 ⭐</label>
+                            </div>
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="rating" id="rating3" value="3">
+                                <label class="form-check-label" for="rating3">3 ⭐</label>
+                            </div>
+                            <div class="form-check me-3">
+                                <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
+                                <label class="form-check-label" for="rating2">2 ⭐</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rating" id="rating1" value="1">
+                                <label class="form-check-label" for="rating1">1 ⭐</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="reviewTitle" placeholder="Summarize your experience">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewComment" class="form-label">Comment</label>
+                        <textarea class="form-control" id="reviewComment" rows="4" placeholder="Share your thoughts about this video"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitReview">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add to cart functionality
+        const addToCartBtn = document.querySelector('.add-to-cart');
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', function() {
+                const videoId = this.dataset.id;
+                const videoType = this.dataset.type;
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                
+                // Make API request to add to cart
+                fetch('/api/add-to-cart/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        content_type: videoType,
+                        object_id: videoId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        alert('Video added to your cart!');
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                    } else {
+                        // Show error message
+                        alert('Error: ' + data.error);
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                });
+            });
+        }
+        
+        // Direct purchase functionality
+        const directPurchaseBtn = document.querySelector('.direct-purchase');
+        if (directPurchaseBtn) {
+            directPurchaseBtn.addEventListener('click', function() {
+                const videoId = this.dataset.id;
+                const videoType = this.dataset.type;
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                // Make API request to create order
+                fetch('/api/payments/orders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        items: [{
+                            content_type: videoType,
+                            object_id: parseInt(videoId),
+                            quantity: 1
+                        }]
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Redirect to checkout page
+                    window.location.href = `/checkout/${data.id}/`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = 'Complete Purchase';
+                });
+            });
+        }
+        
+        // Submit review functionality
+        const submitReviewBtn = document.getElementById('submitReview');
+        if (submitReviewBtn) {
+            submitReviewBtn.addEventListener('click', function() {
+                const rating = document.querySelector('input[name="rating"]:checked')?.value;
+                const title = document.getElementById('reviewTitle').value;
+                const comment = document.getElementById('reviewComment').value;
+                
+                if (!rating) {
+                    alert('Please select a rating');
+                    return;
+                }
+                
+                if (!title || !comment) {
+                    alert('Please provide both a title and comment for your review');
+                    return;
+                }
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+                
+                // Make API request to submit review
+                fetch('/api/reviews/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        content_type: 'video',
+                        object_id: {{ video.id }},
+                        rating: parseInt(rating),
+                        title: title,
+                        comment: comment
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        // Show success message and close modal
+                        alert('Thank you for your review!');
+                        $('#reviewModal').modal('hide');
+                        
+                        // Refresh the page to show the new review
+                        location.reload();
+                    } else {
+                        // Show error message
+                        alert('Error: ' + JSON.stringify(data));
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = 'Submit Review';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = 'Submit Review';
+                });
+            });
+        }
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

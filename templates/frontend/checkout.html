@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .order-summary {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .payment-method-option {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .payment-method-option:hover,
+    .payment-method-option.selected {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .payment-method-option.selected {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+    
+    .payment-logo {
+        height: 30px;
+        object-fit: contain;
+    }
+    
+    #card-element {
+        border: 1px solid #ced4da;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    
+    #card-errors {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+    
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .checkout-steps {
+        margin-bottom: 30px;
+    }
+    
+    .step {
+        position: relative;
+        display: inline-block;
+        width: 32%;
+        text-align: center;
+    }
+    
+    .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .step.active .step-number {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .step.completed .step-number {
+        background-color: #198754;
+        color: white;
+    }
+    
+    .step-title {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+    
+    .step-line {
+        position: absolute;
+        top: 15px;
+        height: 2px;
+        background-color: #e9ecef;
+        width: 100%;
+        left: 50%;
+        z-index: -1;
+    }
+    
+    .step:first-child .step-line {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 checkout-container">
+    <!-- Checkout Steps -->
+    <div class="checkout-steps">
+        <div class="step completed">
+            <div class="step-line"></div>
+            <span class="step-number">1</span>
+            <span class="step-title">Cart</span>
+        </div>
+        <div class="step active">
+            <div class="step-line"></div>
+            <span class="step-number">2</span>
+            <span class="step-title">Payment</span>
+        </div>
+        <div class="step">
+            <div class="step-line"></div>
+            <span class="step-number">3</span>
+            <span class="step-title">Confirmation</span>
+        </div>
+    </div>
+    
+    <h1 class="mb-4">Checkout</h1>
+    
+    <div class="row">
+        <!-- Payment Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Payment Method</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Payment Methods -->
+                    <div class="payment-method-option selected" data-method="credit_card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
+                                <label for="creditCard" class="ms-2 mb-0">Credit / Debit Card</label>
+                            </div>
+                            <div>
+                                <img src="{% static 'img/visa.png' %}" alt="Visa" class="payment-logo me-1">
+                                <img src="{% static 'img/mastercard.png' %}" alt="Mastercard" class="payment-logo me-1">
+                                <img src="{% static 'img/amex.png' %}" alt="American Express" class="payment-logo">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method-option" data-method="paypal">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" id="paypal" value="paypal">
+                                <label for="paypal" class="ms-2 mb-0">PayPal</label>
+                            </div>
+                            <div>
+                                <img src="{% static 'img/paypal.png' %}" alt="PayPal" class="payment-logo">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-method-option" data-method="bank_transfer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" id="bankTransfer" value="bank_transfer">
+                                <label for="bankTransfer" class="ms-2 mb-0">Bank Transfer</label>
+                            </div>
+                            <div>
+                                <img src="{% static 'img/bank.png' %}" alt="Bank" class="payment-logo">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Credit Card Form -->
+                    <div id="creditCardForm" class="mt-4">
+                        <form id="payment-form">
+                            <div class="mb-3">
+                                <label for="card-element" class="form-label">Card Information</label>
+                                <div id="card-element">
+                                    <!-- Stripe Card Element will be inserted here -->
+                                </div>
+                                <div id="card-errors" role="alert"></div>
+                                <div class="secure-badge mt-2">
+                                    <i class="bi bi-lock-fill me-1"></i>
+                                    <span>Your payment information is secure and encrypted</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="savePaymentInfo">
+                                <label class="form-check-label" for="savePaymentInfo">
+                                    Save this payment method for future purchases
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- PayPal Form (hidden by default) -->
+                    <div id="paypalForm" class="mt-4" style="display:none;">
+                        <div class="alert alert-info">
+                            <p class="mb-0">Click "Complete Payment" to be redirected to PayPal to complete your purchase securely.</p>
+                        </div>
+                        <div id="paypal-button-container"></div>
+                    </div>
+                    
+                    <!-- Bank Transfer Form (hidden by default) -->
+                    <div id="bankTransferForm" class="mt-4" style="display:none;">
+                        <div class="alert alert-info">
+                            <p class="mb-0">Please use the following bank details to transfer the payment:</p>
+                        </div>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Bank Name:</strong> EuroBank</p>
+                                <p class="mb-1"><strong>Account Name:</strong> French Tutor Hub Ltd</p>
+                                <p class="mb-1"><strong>IBAN:</strong> FR76 3000 1007 1600 0000 9345 121</p>
+                                <p class="mb-1"><strong>BIC/SWIFT:</strong> BNPAFRPPXXX</p>
+                                <p class="mb-0"><strong>Reference:</strong> ORDER-{{ order.id }}</p>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mt-3">
+                            <small>Please note: Your enrollment will be activated once we've received and verified your payment. This typically takes 1-2 business days.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm order-summary">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for item in order.items.all %}
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="mb-0">{{ item.name }}</h6>
+                                    <small class="text-muted">{{ item.content_type.name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span>€{{ item.price }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>€{{ order.subtotal }}</span>
+                    </div>
+                    
+                    {% if order.discount_amount > 0 %}
+                    <div class="d-flex justify-content-between text-success mb-2">
+                        <span>Discount</span>
+                        <span>-€{{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.tax_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax</span>
+                        <span>€{{ order.tax_amount }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5 class="mb-0">Total</h5>
+                        <h5 class="mb-0">€{{ order.total_amount }}</h5>
+                    </div>
+                    
+                    <!-- Coupon Code Form -->
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Coupon code" id="couponCode">
+                        <button class="btn btn-outline-secondary" type="button" id="applyCoupon">Apply</button>
+                    </div>
+                    
+                    <!-- Complete Payment Button -->
+                    <button id="completePayment" class="btn btn-primary btn-lg w-100">Complete Payment</button>
+                    
+                    <div class="text-center mt-3">
+                        <small><a href="{% url 'frontend:store' %}">Return to store</a></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Order data from Django template
+        const orderId = {{ order.id }};
+        const orderTotal = {{ order.total_amount }};
+        
+        // Stripe setup
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card', {
+            hidePostalCode: true,
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#495057',
+                    fontFamily: 'Arial, sans-serif',
+                }
+            }
+        });
+        
+        // Mount the card element
+        cardElement.mount('#card-element');
+        
+        // Handle card validation errors
+        cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+        
+        // Payment method selection
+        const paymentOptions = document.querySelectorAll('.payment-method-option');
+        const paymentForms = {
+            'credit_card': document.getElementById('creditCardForm'),
+            'paypal': document.getElementById('paypalForm'),
+            'bank_transfer': document.getElementById('bankTransferForm')
+        };
+        
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Update radio button
+                const radio = this.querySelector('input[type="radio"]');
+                radio.checked = true;
+                
+                // Update selected class
+                paymentOptions.forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // Show the correct form
+                const method = this.dataset.method;
+                for (const [key, form] of Object.entries(paymentForms)) {
+                    if (key === method) {
+                        form.style.display = 'block';
+                    } else {
+                        form.style.display = 'none';
+                    }
+                }
+            });
+        });
+        
+        // Complete payment button
+        document.getElementById('completePayment').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            // Get selected payment method
+            const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            
+            try {
+                // Disable button to prevent multiple submissions
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                if (selectedMethod === 'credit_card') {
+                    // Process Stripe payment
+                    await processStripePayment();
+                } else if (selectedMethod === 'paypal') {
+                    // Redirect to PayPal
+                    window.location.href = `/checkout/paypal/${orderId}/`;
+                } else if (selectedMethod === 'bank_transfer') {
+                    // Process bank transfer
+                    await processBankTransfer();
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                document.getElementById('card-errors').textContent = error.message || 'An error occurred while processing your payment.';
+                
+                // Re-enable button
+                this.disabled = false;
+                this.innerHTML = 'Complete Payment';
+            }
+        });
+        
+        // Process Stripe payment
+        async function processStripePayment() {
+            // Create checkout session with backend
+            const response = await fetch(`/api/payments/checkout/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    payment_method: 'credit_card',
+                    payment_details: {
+                        save_payment_method: document.getElementById('savePaymentInfo').checked
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Could not process payment');
+            }
+            
+            // Handle Stripe payment
+            const { client_secret } = data;
+            
+            const result = await stripe.confirmCardPayment(client_secret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: '{{ request.user.get_full_name }}',
+                        email: '{{ request.user.email }}'
+                    }
+                }
+            });
+            
+            if (result.error) {
+                throw new Error(result.error.message);
+            } else if (result.paymentIntent.status === 'succeeded') {
+                // Payment successful, redirect to confirmation
+                window.location.href = `/checkout/success/${orderId}/`;
+            }
+        }
+        
+        // Process bank transfer
+        async function processBankTransfer() {
+            const response = await fetch(`/api/payments/checkout/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    payment_method: 'bank_transfer'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Could not process bank transfer request');
+            }
+            
+            // Redirect to bank transfer instructions page
+            window.location.href = `/checkout/bank-transfer/${orderId}/`;
+        }
+        
+        // Apply coupon code
+        document.getElementById('applyCoupon').addEventListener('click', async function() {
+            const couponCode = document.getElementById('couponCode').value.trim();
+            
+            if (!couponCode) {
+                alert('Please enter a coupon code');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/payments/orders/${orderId}/apply-coupon/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        coupon_code: couponCode
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Invalid coupon code');
+                }
+                
+                // Refresh page to show updated order
+                window.location.reload();
+                
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

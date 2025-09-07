@@ -28,6 +28,8 @@ urlpatterns = [
     path("api/payments/", include("payments.urls", namespace="payments")),
     path("api/enrollments/", include("enrollments.urls", namespace="enrollments")),
     path("api/live/", include("live_sessions.urls", namespace="live_sessions")),
+    path("api/messaging/", include("messaging.urls", namespace="messaging")),
+    path("api/debug/", include("debug.urls")),
     # reviews, badges will be added next
     
     # Frontend URLs
@@ -35,3 +37,4 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])

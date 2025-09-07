@@ -1,20 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}French Tutor Hub{% endblock %}</title>
+    <meta name="description" content="Learn French with expert tutors at French Tutor Hub. Live sessions, interactive courses, and personalized learning.">
+    <meta name="keywords" content="French tutor, French language, French courses, online tutoring, language learning">
+    <title>{% block title %}French Tutor Hub - Apprenez le Français{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Playfair Display, Montserrat and Raleway -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Animation on Scroll -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    {% load static %}
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- French flag-inspired top border -->
+    <div class="w-100" style="height: 5px; background: linear-gradient(90deg, #002654 33%, #ffffff 33%, #ffffff 66%, #ED2939 66%);"></div>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-french-blue">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="bi bi-book"></i> French Tutor Hub
+                <img src="{% static 'img/french-flag-icon.png' %}" alt="French Flag" width="30" class="me-2">
+                <span>French Tutor Hub</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -22,47 +47,59 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'frontend:home' %}">Home</a>
+                        <a class="nav-link" href="{% url 'frontend:home' %}"><i class="fas fa-home me-1"></i> Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'frontend:course_list' %}">Courses</a>
+                        <a class="nav-link" href="{% url 'frontend:course_list' %}"><i class="fas fa-book-open me-1"></i> Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'frontend:teacher_list' %}"><i class="fas fa-chalkboard-teacher me-1"></i> Teachers</a>
                     </li>
                     {% if user.is_authenticated %}
                         {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'frontend:dashboard' %}">Teacher Dashboard</a>
+                            <a class="nav-link" href="{% url 'frontend:dashboard' %}"><i class="fas fa-chalkboard-teacher me-1"></i> Teacher Dashboard</a>
                         </li>
                         {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'frontend:dashboard' %}">Student Dashboard</a>
+                            <a class="nav-link" href="{% url 'frontend:dashboard' %}"><i class="fas fa-user-graduate me-1"></i> Student Dashboard</a>
                         </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'frontend:dashboard_enrollments' %}">My Enrollments</a>
+                            <a class="nav-link" href="{% url 'frontend:dashboard_enrollments' %}"><i class="fas fa-graduation-cap me-1"></i> My Enrollments</a>
                         </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
+                    <!-- Language toggle -->
+                    <li class="nav-item me-2">
+                        <div class="nav-link d-flex align-items-center">
+                            <a href="#" class="text-white me-2 text-decoration-none">EN</a>
+                            <span class="text-white">|</span>
+                            <a href="#" class="text-white ms-2 text-decoration-none">FR</a>
+                        </div>
+                    </li>
+                    
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ user.username }}
+                                <i class="fas fa-user-circle me-1"></i> {{ user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'frontend:profile' %}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'frontend:profile' %}"><i class="fas fa-id-card me-2"></i> Profile</a></li>
                                 {% if user.is_staff %}
-                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin</a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-tools me-2"></i> Admin</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'frontend:logout' %}">Logout</a></li>
+                                <li><a class="dropdown-item" href="{% url 'frontend:logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                             </ul>
                         </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'frontend:login' %}">Login</a>
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-light" href="{% url 'frontend:login' %}"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'frontend:register' %}">Register</a>
+                            <a class="btn btn-french-secondary" href="{% url 'frontend:register' %}"><i class="fas fa-user-plus me-1"></i> Register</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -70,10 +107,12 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    {% block hero %}{% endblock %}
+    
+    <div class="container mt-5 main-content">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4 shadow-sm">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -83,39 +122,89 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer class="mt-5 py-4 bg-light">
+    <footer class="mt-5 py-5 bg-french-dark text-white">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
-                    <h5>French Tutor Hub</h5>
-                    <p>Learn French with our expert tutors and comprehensive courses.</p>
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{% static 'img/french-flag-icon.png' %}" alt="French Flag" width="30" class="me-2">
+                        <h5 class="mb-0 text-french-secondary">French Tutor Hub</h5>
+                    </div>
+                    <p class="mb-3">Découvrez la langue française avec nos tuteurs experts et nos cours complets.</p>
+                    <div class="d-flex mt-3">
+                        <a href="#" class="me-3 text-white social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="me-3 text-white social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="me-3 text-white social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white social-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{% url 'frontend:home' %}">Home</a></li>
-                        <li><a href="{% url 'frontend:course_list' %}">Courses</a></li>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Contact</a></li>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="mb-3 text-french-secondary">Navigation</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li class="mb-2"><a href="{% url 'frontend:home' %}" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Home</a></li>
+                        <li class="mb-2"><a href="{% url 'frontend:course_list' %}" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Courses</a></li>
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> About Us</a></li>
+                        <li><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Contact</a></li>
                     </ul>
                 </div>
-                <div class="col-md-3">
-                    <h5>Contact</h5>
-                    <address>
-                        <i class="bi bi-geo-alt"></i> 123 Learn Street<br>
-                        <i class="bi bi-envelope"></i> <a href="mailto:info@frenchtutorhub.com">info@frenchtutorhub.com</a><br>
-                        <i class="bi bi-telephone"></i> +1 (555) 123-4567
-                    </address>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="mb-3 text-french-secondary">Popular Courses</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Beginner French</a></li>
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Intermediate Grammar</a></li>
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Advanced Conversation</a></li>
+                        <li><a href="#" class="text-white text-decoration-none"><i class="fas fa-chevron-right fa-xs me-1"></i> Business French</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="mb-3 text-french-secondary">Contact</h5>
+                    <ul class="list-unstyled contact-info">
+                        <li class="mb-3"><i class="fas fa-map-marker-alt me-2"></i> 123 Rue de l'Apprentissage,<br>Paris, France</li>
+                        <li class="mb-3"><i class="fas fa-envelope me-2"></i> <a href="mailto:info@frenchtutorhub.com" class="text-white">info@frenchtutorhub.com</a></li>
+                        <li><i class="fas fa-phone me-2"></i> +33 (0)1 23 45 67 89</li>
+                    </ul>
                 </div>
             </div>
-            <hr>
-            <div class="text-center">
-                <p class="mb-0">&copy; 2025 French Tutor Hub. All rights reserved.</p>
+            <hr class="border-secondary my-4">
+            <div class="d-md-flex justify-content-between">
+                <p class="mb-md-0">&copy; 2025 French Tutor Hub. Tous droits réservés.</p>
+                <div>
+                    <a href="#" class="text-white text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-white text-decoration-none me-3">Terms of Service</a>
+                    <a href="#" class="text-white text-decoration-none">Cookie Policy</a>
+                </div>
             </div>
         </div>
+        <!-- French flag-inspired bottom border -->
+        <div class="w-100 mt-4" style="height: 5px; background: linear-gradient(90deg, #002654 33%, #ffffff 33%, #ffffff 66%, #ED2939 66%);"></div>
     </footer>
 
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Animation on Scroll Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Initialize Animation on Scroll -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true
+            });
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

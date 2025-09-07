@@ -1,0 +1,582 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Store - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .store-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/static/img/store-header.jpg');
+        background-size: cover;
+        background-position: center;
+        padding: 60px 0;
+        color: white;
+        margin-bottom: 40px;
+    }
+    
+    .content-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+    
+    .content-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .card-img-top {
+        height: 180px;
+        object-fit: cover;
+    }
+    
+    .filter-sidebar {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .badge-price {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1rem;
+        padding: 8px 12px;
+    }
+    
+    .content-type-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+    
+    .cart-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 100;
+    }
+    
+    .cart-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Store Header -->
+<section class="store-header">
+    <div class="container text-center">
+        <h1 class="display-4">French Learning Content Store</h1>
+        <p class="lead">Browse and purchase individual courses, live sessions, and educational videos</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="row">
+        <!-- Filter Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm filter-sidebar">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Filter Content</h5>
+                </div>
+                <div class="card-body">
+                    <form id="filterForm">
+                        <!-- Content Type Filter -->
+                        <div class="mb-4">
+                            <h6>Content Type</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="course" id="courseCheck" checked>
+                                <label class="form-check-label" for="courseCheck">
+                                    Courses
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="video" id="videoCheck" checked>
+                                <label class="form-check-label" for="videoCheck">
+                                    Individual Videos
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="live" id="liveCheck" checked>
+                                <label class="form-check-label" for="liveCheck">
+                                    Live Sessions
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Range Filter -->
+                        <div class="mb-4">
+                            <h6>Price Range</h6>
+                            <div class="d-flex align-items-center">
+                                <span>€</span>
+                                <input type="number" class="form-control form-control-sm mx-2" id="minPrice" placeholder="Min">
+                                <span>to €</span>
+                                <input type="number" class="form-control form-control-sm mx-2" id="maxPrice" placeholder="Max">
+                            </div>
+                        </div>
+                        
+                        <!-- Level Filter -->
+                        <div class="mb-4">
+                            <h6>Level</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="beginner" id="beginnerCheck" checked>
+                                <label class="form-check-label" for="beginnerCheck">
+                                    Beginner
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="intermediate" id="intermediateCheck" checked>
+                                <label class="form-check-label" for="intermediateCheck">
+                                    Intermediate
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="advanced" id="advancedCheck" checked>
+                                <label class="form-check-label" for="advancedCheck">
+                                    Advanced
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Duration Filter for Videos -->
+                        <div class="mb-4">
+                            <h6>Video Duration</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="short" id="shortCheck" checked>
+                                <label class="form-check-label" for="shortCheck">
+                                    Short (<30 min)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="medium" id="mediumCheck" checked>
+                                <label class="form-check-label" for="mediumCheck">
+                                    Medium (30-60 min)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="long" id="longCheck" checked>
+                                <label class="form-check-label" for="longCheck">
+                                    Long (>60 min)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Grid -->
+        <div class="col-lg-9">
+            <!-- Search and Sort Options -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="input-group" style="max-width: 400px;">
+                    <input type="text" class="form-control" placeholder="Search content..." id="searchInput">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Sort By
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                        <li><button class="dropdown-item sort-option" data-sort="popular">Most Popular</button></li>
+                        <li><button class="dropdown-item sort-option" data-sort="price-low">Price: Low to High</button></li>
+                        <li><button class="dropdown-item sort-option" data-sort="price-high">Price: High to Low</button></li>
+                        <li><button class="dropdown-item sort-option" data-sort="newest">Newest First</button></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Content Items -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="contentGrid">
+                <!-- Dynamically populated from JS -->
+                
+                <!-- Example Course -->
+                {% for content in contents %}
+                <div class="col content-item" data-type="{{ content.type }}" data-price="{{ content.price }}" data-level="{{ content.level }}">
+                    <div class="card content-card shadow-sm h-100">
+                        <div class="position-relative">
+                            <img src="{{ content.image_url|default:'/static/img/default-content.jpg' }}" class="card-img-top" alt="{{ content.title }}">
+                            <span class="badge bg-primary content-type-badge">{{ content.type|title }}</span>
+                            <span class="badge bg-success badge-price">€{{ content.price }}</span>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ content.title }}</h5>
+                            <p class="card-text text-muted">{{ content.description|truncatewords:15 }}</p>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= content.rating %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <small class="text-muted ms-1">({{ content.reviews_count }})</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ content.instructor_image|default:'/static/img/default-avatar.png' }}" alt="{{ content.instructor_name }}" class="rounded-circle me-2" width="30" height="30">
+                                <small>{{ content.instructor_name }}</small>
+                            </div>
+                            <div class="mt-auto d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-primary view-details" data-id="{{ content.id }}" data-type="{{ content.type }}">
+                                    View Details
+                                </button>
+                                <button class="btn btn-sm btn-primary add-to-cart" data-id="{{ content.id }}" data-type="{{ content.type }}" data-price="{{ content.price }}" data-title="{{ content.title }}">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                    <h3 class="mt-3">No content found</h3>
+                    <p class="text-muted">Try adjusting your filters or search term</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Cart Button -->
+<button class="btn btn-primary cart-button" data-bs-toggle="modal" data-bs-target="#cartModal">
+    <i class="bi bi-cart-fill fs-4"></i>
+    <span class="badge bg-danger cart-badge">0</span>
+</button>
+
+<!-- Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems">
+                    <!-- Cart items will be added here dynamically -->
+                    <div class="text-center py-4 empty-cart">
+                        <i class="bi bi-cart text-muted display-4"></i>
+                        <p class="mt-3">Your cart is empty</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4 cart-total">
+                    <h5>Total:</h5>
+                    <h5>€<span id="cartTotal">0.00</span></h5>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Shopping</button>
+                <button type="button" class="btn btn-primary" id="checkoutButton">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cart functionality
+        let cart = [];
+        const cartBadge = document.querySelector('.cart-badge');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const emptyCart = document.querySelector('.empty-cart');
+        const checkoutButton = document.getElementById('checkoutButton');
+        
+        // Add to cart buttons
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const type = this.dataset.type;
+                const price = parseFloat(this.dataset.price);
+                const title = this.dataset.title;
+                
+                // Check if item is already in cart
+                const existingItem = cart.find(item => item.id === id && item.type === type);
+                
+                if (!existingItem) {
+                    // Add to cart
+                    cart.push({
+                        id: id,
+                        type: type,
+                        price: price,
+                        title: title,
+                        quantity: 1
+                    });
+                    
+                    // Update UI
+                    updateCart();
+                    
+                    // Show notification
+                    alert(`${title} added to cart!`);
+                } else {
+                    alert('This item is already in your cart!');
+                }
+            });
+        });
+        
+        // Update cart UI
+        function updateCart() {
+            // Update badge
+            cartBadge.textContent = cart.length;
+            
+            // Clear cart items
+            while (cartItems.firstChild && cartItems.firstChild !== emptyCart) {
+                cartItems.removeChild(cartItems.firstChild);
+            }
+            
+            // Show/hide empty cart message
+            if (cart.length === 0) {
+                emptyCart.style.display = 'block';
+                document.querySelector('.cart-total').style.display = 'none';
+                checkoutButton.disabled = true;
+            } else {
+                emptyCart.style.display = 'none';
+                document.querySelector('.cart-total').style.display = 'flex';
+                checkoutButton.disabled = false;
+                
+                // Add items to cart
+                let total = 0;
+                cart.forEach((item, index) => {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'card mb-2';
+                    itemElement.innerHTML = `
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0">${item.title}</h6>
+                                    <small class="text-muted">${item.type}</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-3">€${item.price}</span>
+                                    <button class="btn btn-sm btn-outline-danger remove-item" data-index="${index}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    cartItems.insertBefore(itemElement, emptyCart);
+                    total += item.price;
+                    
+                    // Add event listener to remove button
+                    const removeButton = itemElement.querySelector('.remove-item');
+                    removeButton.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        cart.splice(index, 1);
+                        updateCart();
+                    });
+                });
+                
+                // Update total
+                cartTotal.textContent = total.toFixed(2);
+            }
+        }
+        
+        // Checkout button
+        checkoutButton.addEventListener('click', function() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            
+            // Prepare items for checkout
+            const items = cart.map(item => ({
+                content_type: item.type,
+                object_id: item.id,
+                quantity: item.quantity
+            }));
+            
+            // Create order
+            fetch('/api/payments/orders/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    items: items
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to create order');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Proceed to checkout with order ID
+                window.location.href = `/checkout/${data.id}/`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create order. Please try again.');
+            });
+        });
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Filter functionality
+        const applyFiltersButton = document.getElementById('applyFilters');
+        applyFiltersButton.addEventListener('click', function() {
+            const contentTypeCheckboxes = document.querySelectorAll('input[type="checkbox"][value="course"], input[type="checkbox"][value="video"], input[type="checkbox"][value="live"]');
+            const selectedTypes = Array.from(contentTypeCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+                
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            
+            const levelCheckboxes = document.querySelectorAll('input[type="checkbox"][value="beginner"], input[type="checkbox"][value="intermediate"], input[type="checkbox"][value="advanced"]');
+            const selectedLevels = Array.from(levelCheckboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+            
+            // Filter content
+            const contentItems = document.querySelectorAll('.content-item');
+            contentItems.forEach(item => {
+                const type = item.dataset.type;
+                const price = parseFloat(item.dataset.price);
+                const level = item.dataset.level;
+                
+                let typeMatch = selectedTypes.includes(type);
+                let priceMatch = true;
+                
+                if (minPrice && maxPrice) {
+                    priceMatch = price >= parseFloat(minPrice) && price <= parseFloat(maxPrice);
+                } else if (minPrice) {
+                    priceMatch = price >= parseFloat(minPrice);
+                } else if (maxPrice) {
+                    priceMatch = price <= parseFloat(maxPrice);
+                }
+                
+                let levelMatch = selectedLevels.includes(level);
+                
+                if (typeMatch && priceMatch && levelMatch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Search functionality
+        const searchButton = document.getElementById('searchButton');
+        const searchInput = document.getElementById('searchInput');
+        
+        searchButton.addEventListener('click', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (!searchTerm) {
+                // Reset search
+                document.querySelectorAll('.content-item').forEach(item => {
+                    item.style.display = 'block';
+                });
+                return;
+            }
+            
+            // Filter items
+            document.querySelectorAll('.content-item').forEach(item => {
+                const title = item.querySelector('.card-title').textContent.toLowerCase();
+                const description = item.querySelector('.card-text').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Sort functionality
+        const sortOptions = document.querySelectorAll('.sort-option');
+        sortOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const sortBy = this.dataset.sort;
+                const contentGrid = document.getElementById('contentGrid');
+                const contentItems = Array.from(document.querySelectorAll('.content-item'));
+                
+                // Sort items
+                contentItems.sort((a, b) => {
+                    if (sortBy === 'price-low') {
+                        return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    } else if (sortBy === 'price-high') {
+                        return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    }
+                    // Default to newest or most popular
+                    return 0;
+                });
+                
+                // Clear grid and re-append sorted items
+                contentGrid.innerHTML = '';
+                contentItems.forEach(item => {
+                    contentGrid.appendChild(item);
+                });
+            });
+        });
+        
+        // View details buttons
+        const viewDetailsButtons = document.querySelectorAll('.view-details');
+        viewDetailsButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const type = this.dataset.type;
+                
+                if (type === 'course') {
+                    window.location.href = `/course/${id}/`;
+                } else if (type === 'video') {
+                    window.location.href = `/video/${id}/`;
+                } else if (type === 'live') {
+                    window.location.href = `/live-session/${id}/`;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

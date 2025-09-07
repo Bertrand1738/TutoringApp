@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#FFFFFF" fill-opacity="0" />
+  
+  <!-- Eiffel Tower Pattern -->
+  <g opacity="0.1" fill="#002654">
+    <!-- Small Eiffel Tower 1 -->
+    <path d="M50,150 L55,130 L60,150 M50,150 L60,150 M52,140 L58,140" />
+    
+    <!-- Small Eiffel Tower 2 -->
+    <path d="M150,50 L155,30 L160,50 M150,50 L160,50 M152,40 L158,40" />
+    
+    <!-- Small Eiffel Tower 3 -->
+    <path d="M250,150 L255,130 L260,150 M250,150 L260,150 M252,140 L258,140" />
+    
+    <!-- Small Eiffel Tower 4 -->
+    <path d="M150,250 L155,230 L160,250 M150,250 L160,250 M152,240 L158,240" />
+  </g>
+  
+  <!-- Fleur-de-lis Pattern -->
+  <g opacity="0.1" fill="#ED2939">
+    <!-- Fleur-de-lis 1 -->
+    <path d="M100,100 C100,95 105,90 110,95 C115,90 120,95 120,100 C120,105 115,110 110,115 C105,110 100,105 100,100 Z" />
+    
+    <!-- Fleur-de-lis 2 -->
+    <path d="M200,100 C200,95 205,90 210,95 C215,90 220,95 220,100 C220,105 215,110 210,115 C205,110 200,105 200,100 Z" />
+    
+    <!-- Fleur-de-lis 3 -->
+    <path d="M100,200 C100,195 105,190 110,195 C115,190 120,195 120,200 C120,205 115,210 110,215 C105,210 100,205 100,200 Z" />
+    
+    <!-- Fleur-de-lis 4 -->
+    <path d="M200,200 C200,195 205,190 210,195 C215,190 220,195 220,200 C220,205 215,210 210,215 C205,210 200,205 200,200 Z" />
+  </g>
+  
+  <!-- Dots Pattern -->
+  <g opacity="0.08" fill="#333333">
+    <circle cx="50" cy="50" r="2" />
+    <circle cx="100" cy="50" r="2" />
+    <circle cx="150" cy="50" r="2" />
+    <circle cx="200" cy="50" r="2" />
+    <circle cx="250" cy="50" r="2" />
+    
+    <circle cx="50" cy="100" r="2" />
+    <circle cx="150" cy="100" r="2" />
+    <circle cx="250" cy="100" r="2" />
+    
+    <circle cx="50" cy="150" r="2" />
+    <circle cx="100" cy="150" r="2" />
+    <circle cx="150" cy="150" r="2" />
+    <circle cx="200" cy="150" r="2" />
+    <circle cx="250" cy="150" r="2" />
+    
+    <circle cx="50" cy="200" r="2" />
+    <circle cx="150" cy="200" r="2" />
+    <circle cx="250" cy="200" r="2" />
+    
+    <circle cx="50" cy="250" r="2" />
+    <circle cx="100" cy="250" r="2" />
+    <circle cx="150" cy="250" r="2" />
+    <circle cx="200" cy="250" r="2" />
+    <circle cx="250" cy="250" r="2" />
+  </g>
+</svg>

@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Student Dashboard - French Tutor Hub{% endblock %}
 
 {% block extra_css %}
 <style>
-    .dashboard-sidebar {
+    .dashb                                                          <img src="{{ enrollment.content_object.thumbnail.url|default:'' }}{% if not enrollment.content_object.thumbnail %}{% static 'img/video-thumbnail.jpg' %}{% endif %}" alt="{{ enrollment.content_object.title }}" width="60" height="60" class="rounded me-3">                                             <img src="{{ enrollment.course.image.url|default:'' }}{% if not enrollment.course.image %}{% static 'img/course-thumbnail.jpg' %}{% endif %}" alt="{{ enrollment.course.title }}" width="60" height="60" class="rounded me-3">ard-sidebar {
         background-color: #f8f9fa;
         border-right: 1px solid #dee2e6;
         min-height: calc(100vh - 200px);
@@ -56,10 +57,10 @@
                 <a class="nav-link {% if active_tab == 'courses' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=courses">
                     <i class="bi bi-journal-bookmark"></i> My Courses
                 </a>
-                <a class="nav-link {% if active_tab == 'schedule' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=schedule">
+                <a class="nav-link {% if active_tab == 'schedule' %}active{% endif %}" href="{% url 'frontend:dashboard_schedule' %}">
                     <i class="bi bi-calendar-check"></i> Schedule
                 </a>
-                <a class="nav-link {% if active_tab == 'messages' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=messages">
+                <a class="nav-link {% if active_tab == 'messages' %}active{% endif %}" href="{% url 'frontend:dashboard_messages' %}">
                     <i class="bi bi-chat-left-text"></i> Messages
                 </a>
                 <a class="nav-link {% if active_tab == 'payments' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=payments">
@@ -157,21 +158,65 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
+                                                    {% if enrollment.course %}
                                                     <img src="{{ enrollment.course.image.url|default:'/static/img/course-thumbnail.jpg' }}" alt="{{ enrollment.course.title }}" width="60" height="60" class="rounded me-3">
                                                     <div>
                                                         <h6 class="mb-0">{{ enrollment.course.title }}</h6>
                                                         <small class="text-muted">{{ enrollment.course.teacher.user.get_full_name }}</small>
                                                     </div>
+                                                    {% elif enrollment.content_type.model == 'video' %}
+                                                    <img src="{{ enrollment.content_object.thumbnail.url|default:'/static/img/video-thumbnail.jpg' }}" alt="{{ enrollment.content_object.title }}" width="60" height="60" class="rounded me-3">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ enrollment.content_object.title }}</h6>
+                                                        <small class="text-muted">Video</small>
+                                                    </div>
+                                                    {% elif enrollment.content_type.model == 'livesession' %}
+                                                                                                        <img src="{% static 'img/live-session.jpg' %}" alt="Live Session" width="60" height="60" class="rounded me-3">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ enrollment.content_object.title|default:"Live Session" }}</h6>
+                                                        <small class="text-muted">{{ enrollment.content_object.start_time|date:"M d, Y - g:i A" }}</small>
+                                                    </div>
+                                                    {% else %}
+                                                    <img src="{% static 'img/default-content.jpg' %}" alt="{{ enrollment.get_content_name }}" width="60" height="60" class="rounded me-3">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ enrollment.get_content_name }}</h6>
+                                                        <small class="text-muted">{{ enrollment.content_type.name }}</small>
+                                                    </div>
+                                                    {% endif %}
                                                 </div>
                                             </td>
                                             <td style="width: 25%;">
                                                 <div class="progress">
-                                                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">{{ enrollment.progress }}%</div>
+                                                    {% if enrollment.course %}
+                                                    {% with progress=enrollment.course.calculate_student_progress_percentage %}
+                                                    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
+                                                    {% endwith %}
+                                                    {% elif enrollment.content_type.model == 'video' %}
+                                                    {% if enrollment.video_details.views_count > 0 %}
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100%</div>
+                                                    {% else %}
+                                                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                                    {% endif %}
+                                                    {% elif enrollment.content_type.model == 'livesession' %}
+                                                    {% if enrollment.content_object.end_time < now %}
+                                                    <div class="progress-bar" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">Completed</div>
+                                                    {% else %}
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">Upcoming</div>
+                                                    {% endif %}
+                                                    {% endif %}
                                                 </div>
                                             </td>
-                                            <td>{{ enrollment.last_activity|date:"M d, Y" }}</td>
+                                            <td>{{ enrollment.last_accessed|date:"M d, Y"|default:enrollment.enrolled_at|date:"M d, Y" }}</td>
                                             <td>
-                                                <a href="#" class="btn btn-sm btn-primary">Continue</a>
+                                                {% if enrollment.course %}
+                                                <a href="{% url 'frontend:course_detail' enrollment.course.id %}" class="btn btn-sm btn-primary">Continue</a>
+                                                {% elif enrollment.content_type.model == 'video' %}
+                                                <a href="{% url 'frontend:video_detail' enrollment.object_id %}" class="btn btn-sm btn-primary">Watch</a>
+                                                {% elif enrollment.content_type.model == 'livesession' %}
+                                                <a href="{% url 'frontend:session_detail' enrollment.object_id %}" class="btn btn-sm btn-primary">View Session</a>
+                                                {% else %}
+                                                <a href="#" class="btn btn-sm btn-primary">View</a>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -236,7 +281,7 @@
                         {% for i in "123"|make_list %}
                             <div class="col-md-4">
                                 <div class="card h-100 course-card">
-                                    <img src="/static/img/course-sample-{{ forloop.counter }}.jpg" class="card-img-top" alt="Course Image">
+                                                                        <img src="{% static 'img/course-sample-'|add:forloop.counter|stringformat:'s'|add:'.jpg' %}" class="card-img-top" alt="Course Image">
                                     <div class="card-body">
                                         <h5 class="card-title">French for {{ forloop.counter|yesno:"Beginners,Intermediate,Advanced" }}</h5>
                                         <p class="card-text">{{ forloop.counter|yesno:"Start your French journey with the basics,Take your French to the next level,Master advanced French concepts" }}</p>
@@ -250,7 +295,7 @@
             </div>
             
             {% elif active_tab == 'courses' %}
-                {% include 'frontend/dashboard_enrollments.html' %}
+                {% include 'frontend/dashboard_enrollments_include.html' %}
                 
             {% elif active_tab == 'schedule' %}
                 {% include 'frontend/dashboard_schedule.html' %}

@@ -1,0 +1,91 @@
+/* Super Simple Header Styles */
+
+/* Reset some basics to ensure visibility */
+header {
+    display: block !important;
+    visibility: visible !important;
+    position: relative;
+    z-index: 9999 !important;
+}
+
+/* Header login bar */
+.login-bar {
+    background-color: #002654 !important;
+    padding: 15px 0;
+    width: 100%;
+    display: block !important;
+    visibility: visible !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Container layout */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Logo styling */
+.site-logo {
+    color: white !important;
+    text-decoration: none !important;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.site-logo:hover {
+    opacity: 0.9;
+}
+
+.site-logo img {
+    margin-right: 10px;
+    transition: transform 0.2s ease;
+}
+
+.site-logo:hover img {
+    transform: scale(1.1);
+}
+
+/* Auth links */
+.auth-links {
+    display: flex;
+    align-items: center;
+}
+
+.auth-link {
+    color: white !important;
+    text-decoration: none !important;
+    margin-right: 15px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.auth-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.auth-link-primary {
+    background-color: #ED2939 !important;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.auth-link-primary:hover {
+    background-color: #c61c2e !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 576px) {
+    .auth-links {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    
+    .auth-link {
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+}

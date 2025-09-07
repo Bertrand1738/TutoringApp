@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Book a Session - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .time-slot {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .time-slot:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .time-slot.selected {
+        border-color: #0d6efd;
+        background-color: #e6effd;
+    }
+    .teacher-card {
+        transition: all 0.3s;
+    }
+    .teacher-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'frontend:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'frontend:dashboard_schedule' %}">Schedule</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Book a Session</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Book a Tutoring Session</h1>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if not enrollments %}
+                <div class="alert alert-warning">
+                    <p>You need to be enrolled in at least one course to book a session.</p>
+                    <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">Browse Courses</a>
+                </div>
+            {% else %}
+                <form action="{% url 'frontend:create_session' %}" method="post" id="bookingForm">
+                    {% csrf_token %}
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">1. Select a Course</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for enrollment in enrollments %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card h-100">
+                                        {% if enrollment.course.image %}
+                                            <img src="{{ enrollment.course.image.url }}" class="card-img-top" alt="{{ enrollment.course.title }}">
+                                        {% else %}
+                                            <div class="bg-light text-center py-5">
+                                                <i class="bi bi-journal-text fs-1"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ enrollment.course.title }}</h5>
+                                            <p class="card-text text-muted">Teacher: {{ enrollment.course.teacher.user.get_full_name }}</p>
+                                            <div class="form-check">
+                                                <input class="form-check-input course-select" type="radio" name="course_id" id="course_{{ enrollment.course.id }}" value="{{ enrollment.course.id }}" data-teacher-id="{{ enrollment.course.teacher.id }}">
+                                                <label class="form-check-label" for="course_{{ enrollment.course.id }}">
+                                                    Select this course
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">2. Select a Time Slot</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="timeSlotContainer">
+                                <p class="text-center py-5">Please select a course first</p>
+                            </div>
+                            
+                            <div id="timeSlotList" class="row g-3" style="display: none;">
+                                {% for slot in available_slots %}
+                                <div class="col-md-4 mb-3 time-slot-wrapper" data-teacher-id="{{ slot.teacher.id }}">
+                                    <div class="card time-slot" data-slot-id="{{ slot.id }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ slot.start_time|date:"D, M d" }}</h5>
+                                            <p class="mb-1">
+                                                <strong>Time:</strong> {{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}
+                                            </p>
+                                            <p class="mb-0">
+                                                <strong>Teacher:</strong> {{ slot.teacher.user.get_full_name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <input type="hidden" name="time_slot_id" id="timeSlotInput">
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">3. Additional Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes for the teacher (optional)</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Let the teacher know what you'd like to focus on during this session..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'frontend:dashboard_schedule' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="bookButton" disabled>Book Session</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseSelectors = document.querySelectorAll('.course-select');
+        const timeSlotWrappers = document.querySelectorAll('.time-slot-wrapper');
+        const timeSlots = document.querySelectorAll('.time-slot');
+        const timeSlotContainer = document.getElementById('timeSlotContainer');
+        const timeSlotList = document.getElementById('timeSlotList');
+        const timeSlotInput = document.getElementById('timeSlotInput');
+        const bookButton = document.getElementById('bookButton');
+        
+        // Handle course selection
+        courseSelectors.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const selectedTeacherId = this.dataset.teacherId;
+                
+                // Show only time slots for the selected teacher
+                timeSlotContainer.style.display = 'none';
+                timeSlotList.style.display = 'flex';
+                
+                let hasVisibleSlots = false;
+                
+                timeSlotWrappers.forEach(function(wrapper) {
+                    if (wrapper.dataset.teacherId === selectedTeacherId) {
+                        wrapper.style.display = 'block';
+                        hasVisibleSlots = true;
+                    } else {
+                        wrapper.style.display = 'none';
+                    }
+                });
+                
+                if (!hasVisibleSlots) {
+                    timeSlotList.style.display = 'none';
+                    timeSlotContainer.style.display = 'block';
+                    timeSlotContainer.innerHTML = '<div class="alert alert-info text-center">No available time slots for this teacher. Please check back later.</div>';
+                }
+                
+                // Reset time slot selection
+                timeSlots.forEach(slot => slot.classList.remove('selected'));
+                timeSlotInput.value = '';
+                updateBookButton();
+            });
+        });
+        
+        // Handle time slot selection
+        timeSlots.forEach(function(slot) {
+            slot.addEventListener('click', function() {
+                // Remove selection from all slots
+                timeSlots.forEach(s => s.classList.remove('selected'));
+                
+                // Select this slot
+                this.classList.add('selected');
+                
+                // Update hidden input
+                timeSlotInput.value = this.dataset.slotId;
+                
+                updateBookButton();
+            });
+        });
+        
+        function updateBookButton() {
+            const courseSelected = Array.from(courseSelectors).some(radio => radio.checked);
+            const timeSlotSelected = timeSlotInput.value !== '';
+            
+            bookButton.disabled = !(courseSelected && timeSlotSelected);
+        }
+    });
+</script>
+{% endblock %}

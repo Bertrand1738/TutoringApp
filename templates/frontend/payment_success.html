@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Successful - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 800px;
+        margin: 60px auto;
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        color: #28a745;
+    }
+    
+    .order-details {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .item-card {
+        transition: transform 0.3s;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .action-button {
+        min-width: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container success-container">
+    <div class="text-center mb-5">
+        <i class="bi bi-check-circle-fill success-icon mb-3"></i>
+        <h1 class="display-4">Payment Successful!</h1>
+        <p class="lead">Thank you for your purchase. Your enrollment has been confirmed.</p>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Order Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Order Number:</strong> #{{ order.id }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ order.completed_at|date:"F j, Y" }}</p>
+                    <p class="mb-1"><strong>Total Amount:</strong> €{{ order.total_amount }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-1"><strong>Payment Method:</strong> {{ order.payment.get_payment_method_display }}</p>
+                    <p class="mb-1"><strong>Status:</strong> <span class="badge bg-success">Completed</span></p>
+                    {% if order.payment.receipt_url %}
+                    <p class="mb-1">
+                        <a href="{{ order.payment.receipt_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-download"></i> Download Receipt
+                        </a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h6 class="mb-3">Items Purchased</h6>
+            <div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+                {% for item in order.items.all %}
+                <div class="col">
+                    <div class="card h-100 item-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title">{{ item.name }}</h5>
+                                <span class="badge bg-primary">{{ item.content_type.name }}</span>
+                            </div>
+                            <p class="card-text text-muted">{{ item.description|truncatewords:15 }}</p>
+                            <p class="card-text"><strong>€{{ item.price }}</strong></p>
+                        </div>
+                        <div class="card-footer bg-white">
+                            {% if item.content_type.model == 'course' %}
+                            <a href="{% url 'frontend:course_detail' item.object_id %}" class="btn btn-outline-primary btn-sm">
+                                Go to Course
+                            </a>
+                            {% elif item.content_type.model == 'video' %}
+                            <a href="{% url 'frontend:video_detail' item.object_id %}" class="btn btn-outline-primary btn-sm">
+                                Watch Video
+                            </a>
+                            {% elif item.content_type.model == 'livesession' %}
+                            <a href="{% url 'frontend:session_detail' item.object_id %}" class="btn btn-outline-primary btn-sm">
+                                View Session Details
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-center mb-4">
+        <a href="{% url 'frontend:dashboard' %}" class="btn btn-primary me-3 action-button">
+            <i class="bi bi-speedometer2"></i> Go to Dashboard
+        </a>
+        <a href="{% url 'frontend:store' %}" class="btn btn-outline-primary action-button">
+            <i class="bi bi-shop"></i> Continue Shopping
+        </a>
+    </div>
+    
+    <div class="alert alert-info text-center">
+        <i class="bi bi-envelope"></i>
+        <span>A confirmation email has been sent to <strong>{{ user.email }}</strong></span>
+    </div>
+</div>
+{% endblock %}

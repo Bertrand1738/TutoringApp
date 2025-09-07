@@ -1,0 +1,94 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Courses</h2>
+    {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
+    <a href="#" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create New Course
+    </a>
+    {% else %}
+    <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Browse Courses
+    </a>
+    {% endif %}
+</div>
+
+<!-- Courses Grid -->
+<div class="row g-4">
+    {% if enrollments %}
+        {% for enrollment in enrollments %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 course-card">
+                {% if enrollment.content_type == 'course' %}
+                <img src="{{ enrollment.course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-primary">Course</span>
+                    </div>
+                    <p class="text-muted">{{ enrollment.course.teacher.user.get_full_name }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Progress</div>
+                        <div class="small">{{ enrollment.progress }}%</div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:course_detail' enrollment.course.id %}" class="btn btn-primary btn-sm">Continue Learning</a>
+                </div>
+                {% elif enrollment.content_type == 'video' %}
+                <img src="{{ enrollment.video.thumbnail.url|default:'/static/img/video-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-danger">Video</span>
+                    </div>
+                    <p class="text-muted">{{ enrollment.enrolled_at|date:'F j, Y' }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Progress</div>
+                        <div class="small">{{ enrollment.progress }}%</div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:video_detail' enrollment.video.id %}" class="btn btn-primary btn-sm">Watch Video</a>
+                </div>
+                {% elif enrollment.content_type == 'livesession' %}
+                <img src="/static/img/live-session.jpg" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-success">Live Session</span>
+                    </div>
+                    <p class="text-muted">{{ enrollment.session.start_time|date:'F j, Y - g:i A' }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Status</div>
+                        {% if enrollment.progress == 100 %}
+                        <div class="badge bg-success">Completed</div>
+                        {% else %}
+                        <div class="badge bg-warning">Upcoming</div>
+                        {% endif %}
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar {% if enrollment.progress < 100 %}bg-warning{% endif %}" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:session_detail' enrollment.session.id %}" class="btn btn-primary btn-sm">Session Details</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> No courses found</h5>
+                <p>You are not enrolled in any courses yet. Browse our available courses to enroll.</p>
+                <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">Browse Courses</a>
+            </div>
+        </div>
+    {% endif %}
+</div>

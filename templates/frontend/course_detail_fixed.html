@@ -1,0 +1,558 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}{{ course.title }} - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "img/course-header.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 80px 0;
+        color: white;
+    }
+
+    .course-nav {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .content-item {
+        margin-bottom: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+
+    .content-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .teacher-profile {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .lock-icon {
+        font-size: 2rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Course Header -->
+<section class="course-header mb-4">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <span class="badge bg-primary mb-2">{{ course.category.name|default:"Uncategorized" }}</span>
+                <h1 class="display-5">{{ course.title }}</h1>
+                <p class="lead">{{ course.description|truncatewords:30 }}</p>
+                <div class="d-flex align-items-center">
+                    <img src="{{ course.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle me-2" width="40" height="40">
+                    <span>By {{ course.teacher.user.get_full_name|default:course.teacher.user.username }}</span>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title h4">Course Details</h2>
+                        <p class="h2 text-primary">€{{ course.price }}</p>
+                        {% if is_enrolled %}
+                            <a href="#course-content" class="btn btn-success btn-lg w-100 mb-3">
+                                Continue Learning
+                            </a>
+                        {% else %}
+                            <form method="post" action="{% url 'frontend:enroll_course' course.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                    Enroll Now
+                                </button>
+                            </form>
+                        {% endif %}
+                        <div class="d-grid">
+                            <a href="#" class="btn btn-outline-secondary">Add to Wishlist</a>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="bi bi-camera-video"></i> Videos</span>
+                            <span>{{ course.videos.count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="bi bi-file-earmark-text"></i> Documents</span>
+                            <span>{{ course.pdfs.count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="bi bi-journal-check"></i> Assignments</span>
+                            <span>{{ course.assignments.count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><i class="bi bi-question-circle"></i> Quizzes</span>
+                            <span>{{ course.quizzes.count }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Course Navigation -->
+<nav class="course-nav mb-4 py-2">
+    <div class="container">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link active" href="#overview">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#content">Course Content</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#instructor">Instructor</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#reviews">Reviews</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Overview Section -->
+            <section id="overview" class="mb-5">
+                <h2 class="mb-4">Course Overview</h2>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <p>{{ course.description }}</p>
+                        
+                        <h5 class="mt-4">What you'll learn</h5>
+                        <ul>
+                            <li>Understand and use basic French vocabulary and grammar</li>
+                            <li>Hold conversations in everyday situations</li>
+                            <li>Read and comprehend French texts appropriate to your level</li>
+                            <li>Write in French with increasing confidence and accuracy</li>
+                            <li>Appreciate French culture and customs</li>
+                        </ul>
+                        
+                        <h5 class="mt-4">Requirements</h5>
+                        <ul>
+                            <li>No prior knowledge of French is required for beginner courses</li>
+                            <li>A computer or mobile device with internet access</li>
+                            <li>Willingness to practice consistently</li>
+                        </ul>
+                        
+                        <h5 class="mt-4">Who this course is for</h5>
+                        <ul>
+                            <li>Complete beginners with no previous knowledge of French</li>
+                            <li>Those who have studied some French before but need a refresher</li>
+                            <li>Learners preparing for standardized French exams</li>
+                            <li>Anyone interested in French language and culture</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Course Content Section -->
+            <section id="content" class="mb-5">
+                <h2 class="mb-4">Course Content</h2>
+                
+                {% if is_enrolled %}
+                    <div id="course-content">
+                        <!-- Content items will be displayed here for enrolled students -->
+                        {% for content_item in course.get_all_content %}
+                            <div class="content-item card shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            {% if content_item|class_name == 'Video' %}
+                                                <i class="bi bi-camera-video text-primary"></i>
+                                            {% elif content_item|class_name == 'PDF' %}
+                                                <i class="bi bi-file-earmark-text text-danger"></i>
+                                            {% elif content_item|class_name == 'Assignment' %}
+                                                <i class="bi bi-journal-check text-success"></i>
+                                            {% elif content_item|class_name == 'Quiz' %}
+                                                <i class="bi bi-question-circle text-warning"></i>
+                                            {% endif %}
+                                            {{ content_item.title }}
+                                        </h5>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                    </div>
+                                    <p class="text-muted mt-2 mb-0">{{ content_item.description|truncatewords:15 }}</p>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="alert alert-info">
+                                No content has been added to this course yet. Check back soon!
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Preview content for non-enrolled students -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5>Course Curriculum</h5>
+                            <p>This course includes:</p>
+                            <ul>
+                                <li><i class="bi bi-camera-video"></i> {{ course.videos.count }} videos</li>
+                                <li><i class="bi bi-file-earmark-text"></i> {{ course.pdfs.count }} downloadable resources</li>
+                                <li><i class="bi bi-journal-check"></i> {{ course.assignments.count }} practical assignments</li>
+                                <li><i class="bi bi-question-circle"></i> {{ course.quizzes.count }} quizzes to test your knowledge</li>
+                            </ul>
+                            
+                            <div class="mt-4">
+                                <h6>Preview Content</h6>
+                                <!-- Show only preview content -->
+                                {% for content_item in preview_content %}
+                                    <div class="content-item card bg-light mb-2">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    {% if content_item|class_name == 'Video' %}
+                                                        <i class="bi bi-camera-video text-primary"></i>
+                                                    {% elif content_item|class_name == 'PDF' %}
+                                                        <i class="bi bi-file-earmark-text text-danger"></i>
+                                                    {% endif %}
+                                                    {{ content_item.title }} <span class="badge bg-success ms-2">Preview</span>
+                                                </div>
+                                                <a href="#" class="btn btn-sm btn-outline-secondary">Preview</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="alert alert-info">
+                                        No preview content available.
+                                    </div>
+                                {% endfor %}
+                                
+                                <!-- Locked content examples -->
+                                <div class="content-item card bg-light mb-2">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="bi bi-camera-video"></i> 
+                                                Introduction to French Grammar
+                                            </div>
+                                            <span class="text-muted"><i class="bi bi-lock"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="content-item card bg-light mb-2">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="bi bi-journal-check"></i> 
+                                                First Assignment: Basic Phrases
+                                            </div>
+                                            <span class="text-muted"><i class="bi bi-lock"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <i class="bi bi-info-circle"></i> Enroll in this course to access all content.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+            
+            <!-- Instructor Section -->
+            <section id="instructor" class="mb-5">
+                <h2 class="mb-4">Your Instructor</h2>
+                <div class="card shadow-sm teacher-profile">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <img src="{{ course.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ course.teacher.user.get_full_name }}" class="rounded-circle img-fluid mb-3" style="max-width: 150px;">
+                            </div>
+                            <div class="col-md-9">
+                                <h4>{{ course.teacher.user.get_full_name|default:course.teacher.user.username }}</h4>
+                                <p class="text-muted">{{ course.teacher.title|default:"French Instructor" }}</p>
+                                
+                                <div class="mb-3">
+                                    <span class="text-warning">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                    </span>
+                                    <span class="ms-2">4.8 Instructor Rating</span>
+                                </div>
+                                
+                                <div class="d-flex mb-3">
+                                    <div class="me-4">
+                                        <i class="bi bi-person-check"></i> {{ course.teacher.taught_courses.count }} Courses
+                                    </div>
+                                    <div class="me-4">
+                                        <i class="bi bi-people"></i> 1,200+ Students
+                                    </div>
+                                    <div>
+                                        <i class="bi bi-chat-quote"></i> 250+ Reviews
+                                    </div>
+                                </div>
+                                
+                                <p>{{ course.teacher.bio|default:"A passionate French language instructor with years of experience teaching students of all levels. Dedicated to making learning French an enjoyable and rewarding experience." }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Reviews Section -->
+            <section id="reviews" class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">Student Reviews</h2>
+                    {% if is_enrolled %}
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                        Write a Review
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <!-- Reviews will be dynamically populated here -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex mb-3">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Student" class="rounded-circle me-3" width="50" height="50">
+                            <div>
+                                <h5 class="mb-1">Marie Johnson</h5>
+                                <div class="text-warning mb-1">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                <small class="text-muted">2 months ago</small>
+                            </div>
+                        </div>
+                        <p>This course exceeded my expectations! The instructor explains complex grammar concepts in a way that's easy to understand. The interactive exercises really helped reinforce what I learned.</p>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex mb-3">
+                            <img src="{% static 'img/default-avatar.png' %}" alt="Student" class="rounded-circle me-3" width="50" height="50">
+                            <div>
+                                <h5 class="mb-1">Alex Thompson</h5>
+                                <div class="text-warning mb-1">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star"></i>
+                                </div>
+                                <small class="text-muted">3 months ago</small>
+                            </div>
+                        </div>
+                        <p>Very comprehensive course with great materials. The instructor is knowledgeable and engaging. I would have liked more speaking practice opportunities, but overall it's excellent value for money.</p>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="#" class="btn btn-outline-secondary">Load More Reviews</a>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Related Courses -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Related Courses</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Dynamically populated related courses -->
+                    {% for related_course in related_courses %}
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <img src="{{ related_course.image.url|default:'{% static 'img/course-thumbnail.jpg' %}" alt="{{ related_course.title }}" width="70" height="70" class="rounded">
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="mb-0">{{ related_course.title }}</h6>
+                                <div class="text-warning small">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-half"></i>
+                                </div>
+                                <p class="mb-0">€{{ related_course.price }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-search display-4"></i>
+                            <p class="mt-2">No related courses found.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Course Certificate -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <i class="bi bi-award text-primary display-4"></i>
+                    <h5 class="mt-3">Course Certificate</h5>
+                    <p>Complete this course and earn a certificate of completion</p>
+                </div>
+            </div>
+            
+            <!-- Share Course -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Share This Course</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center">
+                        <a href="#" class="btn btn-outline-primary mx-1">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-info mx-1">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-danger mx-1">
+                            <i class="bi bi-pinterest"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary mx-1">
+                            <i class="bi bi-link-45deg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+{% if is_enrolled %}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div class="rating-stars">
+                            <div class="d-flex">
+                                <div class="me-2">
+                                    <input type="radio" id="star5" name="rating" value="5">
+                                    <label for="star5"><i class="bi bi-star-fill fs-3"></i></label>
+                                </div>
+                                <div class="me-2">
+                                    <input type="radio" id="star4" name="rating" value="4">
+                                    <label for="star4"><i class="bi bi-star-fill fs-3"></i></label>
+                                </div>
+                                <div class="me-2">
+                                    <input type="radio" id="star3" name="rating" value="3">
+                                    <label for="star3"><i class="bi bi-star-fill fs-3"></i></label>
+                                </div>
+                                <div class="me-2">
+                                    <input type="radio" id="star2" name="rating" value="2">
+                                    <label for="star2"><i class="bi bi-star-fill fs-3"></i></label>
+                                </div>
+                                <div class="me-2">
+                                    <input type="radio" id="star1" name="rating" value="1">
+                                    <label for="star1"><i class="bi bi-star-fill fs-3"></i></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="reviewTitle" placeholder="Summarize your experience">
+                    </div>
+                    <div class="mb-3">
+                        <label for="reviewComment" class="form-label">Review</label>
+                        <textarea class="form-control" id="reviewComment" rows="4" placeholder="Share your experience with this course"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Submit Review</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Make course navigation sticky
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.course-nav .nav-link');
+        
+        // Handle navigation clicks
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                navLinks.forEach(navLink => {
+                    navLink.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Scroll to section
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                window.scrollTo({
+                    top: targetSection.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Add scroll spy functionality
+        window.addEventListener('scroll', function() {
+            const scrollPosition = window.scrollY;
+            
+            // Find current section
+            const sections = ['#overview', '#content', '#instructor', '#reviews'];
+            
+            for (let i = sections.length - 1; i >= 0; i--) {
+                const section = document.querySelector(sections[i]);
+                if (section && scrollPosition >= section.offsetTop - 150) {
+                    // Remove active class from all links
+                    navLinks.forEach(navLink => {
+                        navLink.classList.remove('active');
+                    });
+                    
+                    // Add active class to current section link
+                    const activeLink = document.querySelector(`.course-nav .nav-link[href="${sections[i]}"]`);
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                    
+                    break;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -22,9 +22,9 @@ def get_env_variable(var_name):
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Explicitly set to False
+DEBUG = True  # Set to True for development
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "debug",
 
     # other local apps
     "courses.apps.CoursesConfig",
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     "student_enrollments.apps.StudentEnrollmentsConfig",
     "live_sessions.apps.LiveSessionsConfig",
     "frontend.apps.FrontendConfig",
+    "messaging.apps.MessagingConfig",
 ]
 
 MIDDLEWARE = [
@@ -158,12 +161,24 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),  # Extended to 2 hours
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,  # Get new refresh token when refreshing
+    "BLACKLIST_AFTER_ROTATION": True,  # Blacklist old refresh tokens when refreshed
+    "UPDATE_LAST_LOGIN": True,  # Update last_login field in User model
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=120),  # Should match ACCESS_TOKEN_LIFETIME
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=7),  # Should match REFRESH_TOKEN_LIFETIME
 }
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
+
+# Authentication URLs
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # Stripe Configuration (with development fallbacks)
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'dummy-dev-key')

@@ -78,12 +78,37 @@ function initializeUI() {
     const logoutButtons = document.querySelectorAll('.logout-button');
     if (logoutButtons.length > 0) {
         logoutButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
+            button.addEventListener('click', async (e) => {
                 e.preventDefault();
                 
-                // Clear stored tokens
+                try {
+                    // Get CSRF token for the logout request
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+                    
+                    // Call logout endpoint to clear server-side session
+                    await fetch('/api/auth/logout/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        credentials: 'same-origin'
+                    });
+                } catch (error) {
+                    console.warn('Error during logout:', error);
+                    // Continue with client-side logout even if server-side logout fails
+                }
+                
+                // Clear all stored tokens
                 localStorage.removeItem('token');
                 localStorage.removeItem('refresh_token');
+                localStorage.removeItem('access_token');
+                sessionStorage.removeItem('access_token');
+                
+                // Clear cookies
+                document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+                document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
                 
                 // Redirect to login page
                 window.location.href = '/login/';
@@ -93,6 +118,82 @@ function initializeUI() {
     
     // Check URL params for messages (like registration success)
     checkUrlParamsForMessages();
+    
+    // Navbar scroll effect
+    const navbar = document.querySelector('.navbar');
+    if (navbar) {
+        console.log('Navbar found:', navbar);
+        // Make sure navbar is visible
+        navbar.style.display = 'block';
+        navbar.style.visibility = 'visible';
+        
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+    } else {
+        console.warn('Navbar not found in the DOM');
+    }
+    
+    // Add animation classes to elements based on viewport
+    function animateElements() {
+        // Apply slide-in-left to left side elements
+        document.querySelectorAll('.animate-left').forEach(element => {
+            if (isInViewport(element) && !element.classList.contains('slide-in-left')) {
+                element.classList.add('slide-in-left');
+            }
+        });
+        
+        // Apply slide-in-right to right side elements
+        document.querySelectorAll('.animate-right').forEach(element => {
+            if (isInViewport(element) && !element.classList.contains('slide-in-right')) {
+                element.classList.add('slide-in-right');
+            }
+        });
+        
+        // Apply fade-in to other elements
+        document.querySelectorAll('.animate-fade').forEach(element => {
+            if (isInViewport(element) && !element.classList.contains('fade-in')) {
+                element.classList.add('fade-in');
+            }
+        });
+    }
+    
+    // Helper function to check if element is in viewport
+    function isInViewport(element) {
+        const rect = element.getBoundingClientRect();
+        return (
+            rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.bottom >= 0
+        );
+    }
+    
+    // Run animations on page load and scroll
+    animateElements();
+    window.addEventListener('scroll', animateElements);
+    
+    // Add hover animations to cards
+    document.querySelectorAll('.card').forEach(card => {
+        card.classList.add('card-hover');
+    });
+    
+    // Add hover animations to French flag elements
+    document.querySelectorAll('.navbar-brand img').forEach(flag => {
+        flag.classList.add('flag-wave');
+    });
+    
+    // Add animated underline to navigation links
+    document.querySelectorAll('.footer-links a').forEach(link => {
+        link.classList.add('animated-link');
+    });
+    
+    // Add float animation to CTA buttons
+    document.querySelectorAll('.btn-french-primary, .btn-french-secondary').forEach(button => {
+        button.classList.add('btn-float');
+    });
 }
 
 /**
@@ -587,15 +688,49 @@ async function refreshToken() {
         }
         
         const data = await response.json();
+        
+        // Store the new token in all possible storage mechanisms
         localStorage.setItem('token', data.access);
+        localStorage.setItem('access_token', data.access);
+        sessionStorage.setItem('access_token', data.access);
+        
+        // Update cookie for middleware
+        document.cookie = `access_token=${data.access}; path=/; max-age=${60*60}; SameSite=Lax`;
+        
+        // Sync with Django session
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            
+            await fetch('/api/auth/sync-tokens/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    access_token: data.access,
+                    refresh_token: refreshToken
+                }),
+                credentials: 'same-origin'
+            });
+        } catch (syncError) {
+            console.warn('Failed to sync refreshed token with session:', syncError);
+        }
         
         return true;
     } catch (error) {
         console.error('Token refresh failed:', error);
         
-        // Clear tokens and redirect to login
+        // Clear tokens
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('access_token');
+        sessionStorage.removeItem('access_token');
+        
+        // Clear cookies
+        document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+        document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
         
         return false;
     }

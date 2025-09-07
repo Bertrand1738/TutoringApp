@@ -58,7 +58,7 @@
                 <a class="nav-link {% if active_tab == 'schedule' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=schedule">
                     <i class="bi bi-calendar-check"></i> Schedule
                 </a>
-                <a class="nav-link {% if active_tab == 'messages' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=messages">
+                <a class="nav-link {% if active_tab == 'messages' %}active{% endif %}" href="{% url 'frontend:dashboard_messages' %}">
                     <i class="bi bi-chat-left-text"></i> Messages
                 </a>
                 <a class="nav-link {% if active_tab == 'payments' %}active{% endif %}" href="{% url 'frontend:dashboard' %}?tab=payments">

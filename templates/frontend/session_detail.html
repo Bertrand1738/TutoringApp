@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ session.title|default:"Live Session" }} - French Tutor Hub{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-header {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "img/live-session-header.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        padding: 60px 0;
+        color: white;
+        margin-bottom: 30px;
+    }
+    
+    .instructor-profile {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .session-details {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .session-time {
+        font-size: 1.2rem;
+        font-weight: 500;
+    }
+    
+    .calendar-icon {
+        font-size: 3rem;
+        color: #0d6efd;
+    }
+    
+    .session-benefits {
+        border-left: 4px solid #198754;
+        padding-left: 20px;
+    }
+    
+    .session-platform {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .platform-icon {
+        font-size: 1.5rem;
+    }
+    
+    .countdown-container {
+        background-color: #0d6efd;
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .countdown-number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .countdown-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Session Header -->
+<section class="session-header">
+    <div class="container text-center">
+        <span class="badge bg-primary mb-2">Live Session</span>
+        <h1 class="display-5">{{ session.title|default:"One-on-One French Tutoring" }}</h1>
+        <p class="lead">{{ session.description|default:"Interactive live session with a professional French tutor" }}</p>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8 mb-4">
+            <!-- Session Information -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Session Information</h5>
+                </div>
+                <div class="card-body">
+                    <h4>{{ session.title|default:"One-on-One French Tutoring Session" }}</h4>
+                    
+                    <div class="session-details p-3 my-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="mb-2"><i class="bi bi-calendar-event me-2"></i> {{ session.start_time|date:"l, F j, Y" }}</p>
+                                <p class="session-time mb-2"><i class="bi bi-clock me-2"></i> {{ session.start_time|date:"g:i A" }} - {{ session.end_time|date:"g:i A" }}</p>
+                                <p class="mb-0 session-platform">
+                                    <i class="bi bi-camera-video me-2 platform-icon"></i> 
+                                    Via {{ session.platform|default:"Zoom" }} (details provided after booking)
+                                </p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-2"><i class="bi bi-clock-history me-2"></i> Duration: {{ session.duration|default:"60" }} minutes</p>
+                                <p class="mb-2"><i class="bi bi-translate me-2"></i> Language Level: {{ session.level|default:"All levels" }}</p>
+                                {% if is_booked %}
+                                <span class="badge bg-success">Booked</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p>{{ session.description|default:"This one-on-one tutoring session is designed to help you improve your French language skills through personalized instruction. Your tutor will focus on your specific needs, whether that's pronunciation, vocabulary, grammar, or conversation practice." }}</p>
+                    
+                    <hr>
+                    
+                    <h5 class="mb-3">What to Expect</h5>
+                    <div class="session-benefits mb-4">
+                        <ul class="mb-0">
+                            <li>Personalized attention from a qualified French tutor</li>
+                            <li>Focus on your specific language learning goals</li>
+                            <li>Real-time feedback and correction</li>
+                            <li>Conversation practice in a supportive environment</li>
+                            <li>Additional resources and exercises tailored to your needs</li>
+                        </ul>
+                    </div>
+                    
+                    <h5 class="mb-3">Preparation</h5>
+                    <p>To get the most out of your session:</p>
+                    <ul>
+                        <li>Have a stable internet connection and a quiet environment</li>
+                        <li>Test your microphone and camera before the session</li>
+                        <li>Prepare specific questions or topics you'd like to cover</li>
+                        <li>Have a notebook and pen ready for taking notes</li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if is_booked %}
+            <!-- Countdown to Session (if booked) -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="countdown-container">
+                        <h5 class="mb-3 text-center">Your session starts in:</h5>
+                        <div class="row text-center" id="countdown">
+                            <div class="col">
+                                <div class="countdown-number" id="countdown-days">00</div>
+                                <div class="countdown-label">Days</div>
+                            </div>
+                            <div class="col">
+                                <div class="countdown-number" id="countdown-hours">00</div>
+                                <div class="countdown-label">Hours</div>
+                            </div>
+                            <div class="col">
+                                <div class="countdown-number" id="countdown-minutes">00</div>
+                                <div class="countdown-label">Minutes</div>
+                            </div>
+                            <div class="col">
+                                <div class="countdown-number" id="countdown-seconds">00</div>
+                                <div class="countdown-label">Seconds</div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="{{ session.meeting_url }}" target="_blank" class="btn btn-light">
+                                <i class="bi bi-camera-video"></i> Join Session
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Session Materials (if booked) -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Session Materials</h5>
+                </div>
+                <div class="card-body">
+                    <p>Your tutor has provided the following materials for your session:</p>
+                    
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                Session Worksheet
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Download</a>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                Vocabulary List
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Download</a>
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Please review these materials before your session.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- FAQ Section -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Frequently Asked Questions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    What happens if I need to reschedule?
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You can reschedule your session up to 24 hours before the scheduled time at no additional cost. Please contact your tutor or our support team to arrange a new time.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    What technology do I need for the session?
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    You'll need a computer or tablet with a webcam, microphone, and stable internet connection. We recommend using headphones for better audio quality. The session will take place on {{ session.platform|default:"Zoom" }}, and a link will be sent to you after booking.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    Will I receive a recording of the session?
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Yes, with your permission, the session can be recorded and shared with you afterward for review purposes. This is optional and can be discussed with your tutor at the beginning of the session.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Booking Card (if not booked) -->
+            {% if not is_booked %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-calendar-check calendar-icon"></i>
+                    </div>
+                    <h4 class="card-title">Book This Session</h4>
+                    <p class="display-5 text-primary mb-3">€{{ session.price }}</p>
+                    <ul class="list-unstyled text-start mb-4">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i> 
+                            {{ session.duration|default:"60" }}-minute one-on-one session
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Personalized instruction
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Session materials included
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Option to record session
+                        </li>
+                    </ul>
+                    <button class="btn btn-primary btn-lg w-100 mb-3" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                        Book Now
+                    </button>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-secondary btn-sm add-to-cart" data-id="{{ session.id }}" data-type="live">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <small class="text-muted">Only {{ session.spots_left|default:"1" }} spot{% if session.spots_left|default:1 != 1 %}s{% endif %} left for this session</small>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Instructor Card -->
+            <div class="card shadow-sm instructor-profile mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">About Your Tutor</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img src="{{ session.teacher.profile_picture.url|default:'/static/img/default-avatar.png' }}" alt="{{ session.teacher.user.get_full_name|default:'Instructor' }}" class="rounded-circle" width="100" height="100">
+                        <h5 class="mt-2">{{ session.teacher.user.get_full_name|default:"French Tutor" }}</h5>
+                        <p class="text-muted">{{ session.teacher.title|default:"French Language Instructor" }}</p>
+                    </div>
+                    
+                    <p>{{ session.teacher.bio|default:"A professional French language instructor with extensive experience teaching students of all levels. Specializes in conversational French and pronunciation coaching." }}</p>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Experience:</span>
+                        <span>{{ session.teacher.years_experience|default:"5+" }} years</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Sessions taught:</span>
+                        <span>{{ session.teacher.sessions_count|default:"120" }}+</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Rating:</span>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <small class="text-muted ms-1">5.0</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-outline-primary btn-sm w-100">View Tutor Profile</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testimonials -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Student Testimonials</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-warning mb-1">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="mb-1">"My session was incredibly helpful. The tutor was patient and adapted to my learning style. I made more progress in one hour than I had in weeks of self-study."</p>
+                        <small class="text-muted">— Marie D.</small>
+                    </div>
+                    
+                    <div>
+                        <div class="text-warning mb-1">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="mb-1">"Excellent session! The tutor was knowledgeable and focused on the specific areas where I needed help. I'll definitely book more sessions."</p>
+                        <small class="text-muted">— Thomas L.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookingModalLabel">Book Live Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5>{{ session.title|default:"One-on-One French Tutoring" }}</h5>
+                        <p class="mb-0 text-muted">
+                            {{ session.start_time|date:"l, F j, Y" }} at {{ session.start_time|date:"g:i A" }}
+                        </p>
+                    </div>
+                    <h4 class="text-primary">€{{ session.price }}</h4>
+                </div>
+                
+                <hr>
+                
+                <form id="bookingForm">
+                    {% if enrolled_courses %}
+                    <div class="mb-3">
+                        <label for="courseSelect" class="form-label">Select Course (optional)</label>
+                        <select class="form-select" id="courseSelect">
+                            <option value="">Not related to a specific course</option>
+                            {% for course in enrolled_courses %}
+                            <option value="{{ course.id }}">{{ course.title }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">If this session is related to a course you're enrolled in, please select it.</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="sessionNotes" class="form-label">Notes for the Tutor (optional)</label>
+                        <textarea class="form-control" id="sessionNotes" rows="3" placeholder="Describe any specific topics or questions you'd like to cover in the session"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="credit_card" checked>
+                            <label class="form-check-label" for="creditCard">Credit / Debit Card</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal">
+                            <label class="form-check-label" for="paypal">PayPal</label>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        By booking, you agree to our cancellation policy and Terms of Service.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary direct-purchase" data-id="{{ session.id }}" data-type="live">
+                    Complete Booking
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add to cart functionality
+        const addToCartBtn = document.querySelector('.add-to-cart');
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', function() {
+                const sessionId = this.dataset.id;
+                const sessionType = this.dataset.type;
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                
+                // Make API request to add to cart
+                fetch('/api/add-to-cart/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        content_type: sessionType,
+                        object_id: sessionId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        alert('Session added to your cart!');
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                    } else {
+                        // Show error message
+                        alert('Error: ' + data.error);
+                        // Reset button
+                        this.disabled = false;
+                        this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
+                });
+            });
+        }
+        
+        // Direct purchase functionality
+        const directPurchaseBtn = document.querySelector('.direct-purchase');
+        if (directPurchaseBtn) {
+            directPurchaseBtn.addEventListener('click', function() {
+                const sessionId = this.dataset.id;
+                const sessionType = this.dataset.type;
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                
+                // Additional data for session booking
+                const courseId = document.getElementById('courseSelect')?.value || null;
+                const notes = document.getElementById('sessionNotes')?.value || '';
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                // Make API request to create order
+                fetch('/api/payments/orders/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        items: [{
+                            content_type: sessionType,
+                            object_id: parseInt(sessionId),
+                            quantity: 1,
+                            metadata: {
+                                course_id: courseId,
+                                notes: notes
+                            }
+                        }]
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Redirect to checkout page
+                    window.location.href = `/checkout/${data.id}/`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                    // Reset button
+                    this.disabled = false;
+                    this.innerHTML = 'Complete Booking';
+                });
+            });
+        }
+        
+        // Countdown timer functionality
+        {% if is_booked %}
+        function updateCountdown() {
+            const now = new Date();
+            const sessionDate = new Date("{{ session.start_time|date:'Y-m-d H:i:s' }}");
+            const diff = sessionDate - now;
+            
+            if (diff <= 0) {
+                // Session has started or passed
+                document.getElementById('countdown-days').textContent = '00';
+                document.getElementById('countdown-hours').textContent = '00';
+                document.getElementById('countdown-minutes').textContent = '00';
+                document.getElementById('countdown-seconds').textContent = '00';
+                return;
+            }
+            
+            // Calculate days, hours, minutes, and seconds
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // Update countdown display
+            document.getElementById('countdown-days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('countdown-hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('countdown-minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('countdown-seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+        
+        // Initial update
+        updateCountdown();
+        
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+        {% endif %}
+        
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

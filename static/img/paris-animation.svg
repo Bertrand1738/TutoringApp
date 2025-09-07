@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="ParisAnimation">
+        <!-- Background -->
+        <rect width="512" height="512" fill="#FFFFFF"/>
+        
+        <!-- Eiffel Tower -->
+        <g id="EiffelTower" class="tower">
+            <path d="M256 80L290 320H222L256 80Z" fill="#333333"/>
+            <path d="M256 80L246 140L266 140L256 80Z" fill="#333333"/>
+            <path d="M246 140L236 200L276 200L266 140L246 140Z" fill="#333333"/>
+            <path d="M236 200L226 260L286 260L276 200L236 200Z" fill="#333333"/>
+            <path d="M226 260L216 320H296L286 260L226 260Z" fill="#333333"/>
+            <rect x="200" y="320" width="112" height="20" fill="#333333"/>
+            <rect x="210" y="340" width="92" height="20" fill="#333333"/>
+            <rect x="220" y="360" width="72" height="20" fill="#333333"/>
+        </g>
+        
+        <!-- Arc de Triomphe -->
+        <g id="ArcDeTriomphe" class="monument">
+            <rect x="60" y="280" width="80" height="100" fill="#CCCCCC"/>
+            <path d="M80 280H120V340H80V280Z" fill="#AAAAAA"/>
+        </g>
+        
+        <!-- Notre Dame -->
+        <g id="NotreDame" class="monument">
+            <rect x="370" y="290" width="90" height="90" fill="#CCCCCC"/>
+            <path d="M400 220L430 290H370L400 220Z" fill="#CCCCCC"/>
+            <rect x="395" y="180" width="10" height="40" fill="#AAAAAA"/>
+        </g>
+        
+        <!-- Seine River -->
+        <path id="Seine" d="M0 380C60 360 120 400 180 380C240 360 300 400 360 380C420 360 480 400 512 390V420H0V380Z" fill="#A1C6EA"/>
+        
+        <!-- Stars - will be animated -->
+        <g id="Stars">
+            <circle cx="100" cy="100" r="2" fill="#FFC107" class="star"/>
+            <circle cx="200" cy="120" r="2" fill="#FFC107" class="star"/>
+            <circle cx="300" cy="90" r="2" fill="#FFC107" class="star"/>
+            <circle cx="400" cy="110" r="2" fill="#FFC107" class="star"/>
+            <circle cx="150" cy="150" r="2" fill="#FFC107" class="star"/>
+            <circle cx="250" cy="130" r="2" fill="#FFC107" class="star"/>
+            <circle cx="350" cy="160" r="2" fill="#FFC107" class="star"/>
+            <circle cx="450" cy="140" r="2" fill="#FFC107" class="star"/>
+        </g>
+        
+        <!-- Flag colors on top -->
+        <g id="FrenchFlag">
+            <rect x="0" y="0" width="170" height="20" fill="#002654"/>
+            <rect x="170" y="0" width="170" height="20" fill="#FFFFFF"/>
+            <rect x="340" y="0" width="172" height="20" fill="#ED2939"/>
+        </g>
+        
+        <!-- Flag colors on bottom -->
+        <g id="FrenchFlagBottom">
+            <rect x="0" y="492" width="170" height="20" fill="#002654"/>
+            <rect x="170" y="492" width="170" height="20" fill="#FFFFFF"/>
+            <rect x="340" y="492" width="172" height="20" fill="#ED2939"/>
+        </g>
+        
+        <style>
+            @keyframes twinkle {
+                0% { opacity: 0.3; }
+                50% { opacity: 1; }
+                100% { opacity: 0.3; }
+            }
+            
+            .star {
+                animation: twinkle 3s ease-in-out infinite;
+            }
+            
+            .star:nth-child(1) { animation-delay: 0s; }
+            .star:nth-child(2) { animation-delay: 0.4s; }
+            .star:nth-child(3) { animation-delay: 0.8s; }
+            .star:nth-child(4) { animation-delay: 1.2s; }
+            .star:nth-child(5) { animation-delay: 1.6s; }
+            .star:nth-child(6) { animation-delay: 2.0s; }
+            .star:nth-child(7) { animation-delay: 2.4s; }
+            .star:nth-child(8) { animation-delay: 2.8s; }
+        </style>
+    </g>
+</svg>

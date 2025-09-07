@@ -407,7 +407,7 @@
                     
                     // First try the debug endpoint to see what data is being received
                     try {
-                        const debugResponse = await fetch('/api/auth/debug-register/', {
+                        const debugResponse = await fetch('/api/debug/debug-register/', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -425,26 +425,66 @@
                         console.warn('Debug registration error:', debugError);
                     }
                     
-                    // Use the API service to register
-                    const data = await api.register(apiData);
+                    // Make direct POST request to registration endpoint
+                    const registrationResponse = await fetch('/register/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(apiData),
+                        credentials: 'include'
+                    });
                     
-                    if (data && data.id) {
-                        console.log('Registration successful, redirecting to login page');
+                    // Check the response from our server-side view
+                    const responseData = await registrationResponse.json();
+                    console.log('Registration response:', responseData);
+                    
+                    if (registrationResponse.ok && responseData.success) {
+                        console.log('Registration successful, redirecting to dashboard');
                         
                         // Show success message before redirecting
                         const successMsg = document.createElement('div');
                         successMsg.className = 'alert alert-success';
-                        successMsg.textContent = 'Registration successful! Redirecting to login page...';
+                        successMsg.textContent = 'Registration successful! Redirecting to dashboard...';
                         errorContainer.parentNode.insertBefore(successMsg, errorContainer);
                         
-                        // Redirect to login page with success message after a short delay
+                        // If we have a token in the response, store it
+                        if (responseData.token) {
+                            localStorage.setItem('access_token', responseData.token.access);
+                            localStorage.setItem('refresh_token', responseData.token.refresh);
+                        }
+                        
+                        // Redirect to the URL provided in the response or default to dashboard
                         setTimeout(() => {
-                            window.location.href = '/login/?registered=true';
+                            window.location.href = responseData.redirect || '/dashboard/';
                         }, 1500);
                     } else {
-                        // Display error message from server
-                        const errorMsg = data.detail || 'Registration failed. Please try again.';
-                        errorContainer.textContent = errorMsg;
+                        // Registration was not successful
+                        console.error('Registration failed:', responseData);
+                        
+                        // Show error message
+                        let errorMessage = 'Registration failed. Please try again.';
+                        
+                        if (responseData.errors) {
+                            // Format validation errors
+                            errorMessage = Object.entries(responseData.errors)
+                                .map(([field, messages]) => {
+                                    if (Array.isArray(messages)) {
+                                        return `${field}: ${messages.join(', ')}`;
+                                    } else if (typeof messages === 'string') {
+                                        return `${field}: ${messages}`;
+                                    } else {
+                                        return `${field}: Invalid value`;
+                                    }
+                                })
+                                .join('; ');
+                        } else if (responseData.message) {
+                            errorMessage = responseData.message;
+                        }
+                        
+                        errorContainer.textContent = errorMessage;
                         errorContainer.classList.remove('d-none');
                         
                         // Reset button
@@ -453,6 +493,14 @@
                     }
                 } catch (error) {
                     console.error('Registration error:', error);
+                    
+                    // Display error message
+                    errorContainer.textContent = 'Registration failed: ' + (error.message || 'Please try again.');
+                    errorContainer.classList.remove('d-none');
+                    
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Create Account';
                     
                     // Display error message with details if available
                     errorContainer.textContent = 'Registration failed: ' + (error.message || 'Please try again.');

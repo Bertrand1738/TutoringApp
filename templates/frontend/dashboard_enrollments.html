@@ -1,7 +1,6 @@
-{% extends 'base.html' %}
-
+{% if standalone %}
+{% extends 'frontend/base.html' %}
 {% block title %}My Courses - French Tutor Hub{% endblock %}
-
 {% block extra_css %}
 <style>
     .dashboard-sidebar {
@@ -36,7 +35,7 @@
     .course-card:hover {
         transform: translateY(-5px);
     }
-
+    
     .progress {
         height: 10px;
     }
@@ -61,10 +60,10 @@
                     <i class="bi bi-mortarboard"></i> Students
                 </a>
                 {% endif %}
-                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab=schedule">
+                <a class="nav-link" href="{% url 'frontend:dashboard_schedule' %}">
                     <i class="bi bi-calendar-check"></i> Schedule
                 </a>
-                <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab=messages">
+                <a class="nav-link" href="{% url 'frontend:dashboard_messages' %}">
                     <i class="bi bi-chat-left-text"></i> Messages
                 </a>
                 <a class="nav-link" href="{% url 'frontend:dashboard' %}?tab={% if user.groups.all.0.name == 'teacher' or user.is_staff %}earnings{% else %}billing{% endif %}">
@@ -78,88 +77,104 @@
         
         <!-- Main Content -->
         <div class="col-lg-9 col-md-8 py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>My Courses</h2>
-                {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
-                <a href="#" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New Course
-                </a>
-                {% else %}
-                <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Browse Courses
-                </a>
-                {% endif %}
-            </div>
+{% endif %}
 
-            <!-- Courses Grid -->
-            <div class="row g-4">
-                {% if enrollments %}
-                    {% for enrollment in enrollments %}
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card h-100 course-card">
-                            <img src="{{ enrollment.course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.course.title }}">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ enrollment.course.title }}</h5>
-                                <p class="text-muted">{{ enrollment.course.teacher.user.get_full_name }}</p>
-                                
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="small text-muted">Progress</div>
-                                    <div class="small">{{ enrollment.progress }}%</div>
-                                </div>
-                                <div class="progress mb-3">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                
-                                <a href="#" class="btn btn-primary btn-sm">Continue Learning</a>
-                            </div>
-                        </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Courses</h2>
+    {% if user.groups.all.0.name == 'teacher' or user.is_staff %}
+    <a href="#" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create New Course
+    </a>
+    {% else %}
+    <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Browse Courses
+    </a>
+    {% endif %}
+</div>
+
+<!-- Courses Grid -->
+<div class="row g-4">
+    {% if enrollments %}
+        {% for enrollment in enrollments %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 course-card">
+                {% if enrollment.content_type == 'course' %}
+                <img src="{{ enrollment.course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-primary">Course</span>
                     </div>
-                    {% endfor %}
-                {% elif user.groups.all.0.name == 'teacher' or user.is_staff %}
-                    {% if courses %}
-                        {% for course in courses %}
-                        <div class="col-lg-4 col-md-6">
-                            <div class="card h-100 course-card">
-                                <img src="{{ course.image.url|default:'/static/img/course-thumbnail.jpg' }}" class="card-img-top" alt="{{ course.title }}">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ course.title }}</h5>
-                                    <p class="text-muted">{{ course.category.name|default:"Uncategorized" }}</p>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <div class="small text-muted">Students</div>
-                                        <div class="badge bg-primary">{{ course.enrolled_students|default:"0" }}</div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-between">
-                                        <a href="#" class="btn btn-outline-primary btn-sm">Edit</a>
-                                        <a href="#" class="btn btn-primary btn-sm">View</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="col-12 text-center py-5">
-                            <div class="display-1 text-muted">
-                                <i class="bi bi-journal-bookmark"></i>
-                            </div>
-                            <h4 class="mt-3">You haven't created any courses yet</h4>
-                            <p class="text-muted">Start sharing your knowledge with students!</p>
-                            <a href="#" class="btn btn-primary mt-2">Create Your First Course</a>
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <div class="col-12 text-center py-5">
-                        <div class="display-1 text-muted">
-                            <i class="bi bi-journal-bookmark"></i>
-                        </div>
-                        <h4 class="mt-3">You haven't enrolled in any courses yet</h4>
-                        <p class="text-muted">Start your learning journey today!</p>
-                        <a href="{% url 'frontend:course_list' %}" class="btn btn-primary mt-2">Browse Courses</a>
+                    <p class="text-muted">{{ enrollment.course.teacher.user.get_full_name }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Progress</div>
+                        <div class="small">{{ enrollment.progress }}%</div>
                     </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:course_detail' enrollment.course.id %}" class="btn btn-primary btn-sm">Continue Learning</a>
+                </div>
+                {% elif enrollment.content_type == 'video' %}
+                <img src="{{ enrollment.video.thumbnail.url|default:'/static/img/video-thumbnail.jpg' }}" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-danger">Video</span>
+                    </div>
+                    <p class="text-muted">{{ enrollment.enrolled_at|date:'F j, Y' }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Progress</div>
+                        <div class="small">{{ enrollment.progress }}%</div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:video_detail' enrollment.video.id %}" class="btn btn-primary btn-sm">Watch Video</a>
+                </div>
+                {% elif enrollment.content_type == 'livesession' %}
+                <img src="/static/img/live-session.jpg" class="card-img-top" alt="{{ enrollment.content_name }}" style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title">{{ enrollment.content_name }}</h5>
+                        <span class="badge bg-success">Live Session</span>
+                    </div>
+                    <p class="text-muted">{{ enrollment.session.start_time|date:'F j, Y - g:i A' }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="small text-muted">Status</div>
+                        {% if enrollment.progress == 100 %}
+                        <div class="badge bg-success">Completed</div>
+                        {% else %}
+                        <div class="badge bg-warning">Upcoming</div>
+                        {% endif %}
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar {% if enrollment.progress < 100 %}bg-warning{% endif %}" role="progressbar" style="width: {{ enrollment.progress }}%;" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <a href="{% url 'frontend:session_detail' enrollment.session.id %}" class="btn btn-primary btn-sm">Session Details</a>
+                </div>
                 {% endif %}
             </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="bi bi-info-circle"></i> No courses found</h5>
+                <p>You are not enrolled in any courses yet. Browse our available courses to enroll.</p>
+                <a href="{% url 'frontend:course_list' %}" class="btn btn-primary">Browse Courses</a>
+            </div>
+        </div>
+    {% endif %}
+</div>{% if standalone %}
         </div>
     </div>
 </div>
 {% endblock %}
+{% endif %}
